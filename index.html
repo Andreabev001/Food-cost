@@ -518,8 +518,9 @@ body {
         </div>
         <div class="field"><label>Unità</label>
           <select id="ing-unit">
-            <option value="kg">kg</option>
-            <option value="L">L (litri)</option>
+            <option value="kg">kg (grammi)</option>
+            <option value="L">L (millilitri)</option>
+            <option value="pz">pz (pezzi/unità)</option>
           </select>
         </div>
       </div>
@@ -735,7 +736,7 @@ body {
       <div class="form-section-title">Ingredienti</div>
       <div style="display:grid;grid-template-columns:1fr 70px 50px 24px;gap:6px;margin-bottom:8px;padding:0 12px">
         <span style="font-size:10px;font-weight:800;color:var(--grey);text-transform:uppercase;grid-column:1/3">Ingrediente dal magazzino</span>
-        <span style="font-size:10px;font-weight:800;color:var(--grey);text-transform:uppercase">g/ml</span>
+        <span style="font-size:10px;font-weight:800;color:var(--grey);text-transform:uppercase">Qtà</span>
         <span style="font-size:10px;font-weight:800;color:var(--grey);text-transform:uppercase">Costo</span>
         <span></span>
       </div>
@@ -959,10 +960,11 @@ function recalcAllRecipes(){
       const c=mag?parseFloat(mag.costo)||0:parseFloat(ing.costoL)||0;
       const iv=(parseFloat(mag?mag.iva:ing.iva)||10)/100;
       const qty=parseFloat(ing.qty)||0;
-      const rN=(qty/1000)*c;
+      const unit=mag?mag.unit:(ing.unit||'kg');
+      const rN=unit==='pz'?qty*c:(qty/1000)*c;
       const rL=rN*(1+iv);
       // update stored price
-      if(mag) ing.costoL=mag.costo;
+      if(mag){ ing.costoL=mag.costo; ing.unit=mag.unit; }
       totN+=rN; totL+=rL;
     });
     const cfApp=cfPerMin()*tempo;
@@ -1131,9 +1133,9 @@ function renderIngList(){
         <option value="">— scegli ingrediente —</option>
         ${selectedOpts}
       </select>
-      <input type="number" value="${r.qty}" placeholder="g/ml" step="0.1" min="0" onchange="updIng(${r.id},'qty',this.value)" title="Quantità in grammi o ml">
+      <input type="number" value="${r.qty}" placeholder="${mag&&mag.unit==='pz'?'pz':'g/ml'}" step="${mag&&mag.unit==='pz'?'1':'0.1'}" min="0" onchange="updIng(${r.id},'qty',this.value)" title="Quantità">
       <div style="font-size:10px;color:var(--grey);text-align:center;padding:4px 2px;background:var(--bg);border-radius:8px">
-        ${mag?'€'+((r.qty/1000)*(mag.costo||0)).toFixed(3):'—'}
+        ${mag?(mag.unit==='pz'?'€'+((r.qty||0)*(mag.costo||0)).toFixed(3):'€'+((r.qty/1000)*(mag.costo||0)).toFixed(3)):'—'}
       </div>
       <button class="ing-del" onclick="removeIng(${r.id})">✕</button>
     </div>`;
@@ -1173,7 +1175,8 @@ function liveCalc(){
     const qty=parseFloat(r.qty)||0, iv=(parseFloat(r.iva)||10)/100;
     const mag = r.magId ? magazzino.find(m=>m.id===r.magId) : null;
     const c = mag ? parseFloat(mag.costo)||0 : parseFloat(r.costoL)||0;
-    const rN=(qty/1000)*c;
+    const unit = mag ? mag.unit : 'kg';
+    const rN = unit==='pz' ? qty*c : (qty/1000)*c;
     const rL=rN*(1+iv);
     totN+=rN; totL+=rL;
   });
@@ -1238,10 +1241,10 @@ function saveRecipe(){
   const cat=document.getElementById('f-cat').value;
   const ings=ingRows.filter(r=>r.nome||r.magId).map(r=>{
     const mag=r.magId?magazzino.find(m=>m.id===r.magId):null;
-    return {magId:r.magId||null,nome:mag?mag.nome:r.nome,qty:parseFloat(r.qty)||0,costoL:mag?parseFloat(mag.costo)||0:parseFloat(r.costoL)||0,iva:(parseFloat(mag?mag.iva:r.iva)||10)/100};
+    return {magId:r.magId||null,nome:mag?mag.nome:r.nome,qty:parseFloat(r.qty)||0,costoL:mag?parseFloat(mag.costo)||0:parseFloat(r.costoL)||0,iva:(parseFloat(mag?mag.iva:r.iva)||10)/100,unit:mag?mag.unit:'kg'};
   });
   let totL=0,totN=0;
-  ings.forEach(i=>{const rN=(i.qty/1000)*i.costoL;totN+=rN;totL+=rN*(1+i.iva);});
+  ings.forEach(i=>{const rN=i.unit==='pz'?i.qty*i.costoL:(i.qty/1000)*i.costoL;totN+=rN;totL+=rN*(1+i.iva);});
   const cfApp=cfPerMin()*tempo;
   const costoTot=totL+cfApp;
   const fci=lordo>0?(totL/lordo)*100:null;
