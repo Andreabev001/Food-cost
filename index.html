@@ -747,17 +747,26 @@ body {
     <div class="fc-meter-wrap">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
         <span style="font-size:13px;font-weight:800;color:var(--dark)">Food Cost</span>
-        <span style="font-size:20px;font-weight:900" id="fc-pct-big">—</span>
+        <div style="text-align:right">
+          <div style="font-size:20px;font-weight:900" id="fc-pct-big">—</div>
+          <div style="font-size:11px;color:var(--grey);font-weight:700">con fissi: <span id="fc-pct-tot" style="font-weight:900;color:var(--dark)">—</span></div>
+        </div>
       </div>
       <div class="fc-meter-bar-bg">
         <div class="fc-meter-bar" id="fc-bar" style="width:0%;background:var(--green)"></div>
       </div>
       <div class="fc-meter-labels"><span>0%</span><span style="color:var(--green)">Ottimo &lt;25%</span><span style="color:var(--orange)">25–35%</span><span style="color:var(--red)">&gt;35%</span><span>100%</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--grey);font-weight:700;margin-top:6px">
+        <span>📦 Solo ingredienti (confronto settore)</span>
+        <span>🏠 Con costi fissi (reale)</span>
+      </div>
     </div>
 
     <div class="results-grid">
-      <div class="res-box highlight"><div class="res-val red" id="r-cl">—</div><div class="res-lbl">Costo lordo €</div></div>
+      <div class="res-box highlight"><div class="res-val red" id="r-cl">—</div><div class="res-lbl">Costo ingredienti €</div></div>
       <div class="res-box blue-box"><div class="res-val blue" id="r-cf">—</div><div class="res-lbl">Costi fissi €</div></div>
+      <div class="res-box" style="background:rgba(232,52,42,.05);border:1.5px solid rgba(232,52,42,.15)"><div class="res-val red" id="r-fci">—</div><div class="res-lbl">FC solo ingredienti</div></div>
+      <div class="res-box" style="background:rgba(255,149,0,.08);border:1.5px solid rgba(255,149,0,.2)"><div class="res-val orange" id="r-fctot">—</div><div class="res-lbl">FC con fissi (reale)</div></div>
       <div class="res-box green-box"><div class="res-val green" id="r-mg">—</div><div class="res-lbl">Margine netto €</div></div>
       <div class="res-box green-box"><div class="res-val green" id="r-mgp">—</div><div class="res-lbl">Margine %</div></div>
     </div>
@@ -766,6 +775,8 @@ body {
       <div class="form-section-title">Riepilogo prezzi</div>
       <div class="iva-row"><span class="lbl">Costo ingredienti lordo</span><span class="val" id="bk-cl">—</span></div>
       <div class="iva-row"><span class="lbl">Costi fissi applicati</span><span class="val blue" id="bk-cf">—</span></div>
+      <div class="iva-row"><span class="lbl">FC solo ingredienti %</span><span class="val red" id="bk-fci">—</span></div>
+      <div class="iva-row"><span class="lbl">FC con fissi % (reale)</span><span class="val orange" id="bk-fctot">—</span></div>
       <div class="iva-row"><span class="lbl">Prezzo netto</span><span class="val" id="bk-pn">—</span></div>
       <div class="iva-row"><span class="lbl">IVA su vendita</span><span class="val blue" id="bk-iv">—</span></div>
       <div class="iva-row"><span class="lbl">Prezzo lordo</span><span class="val blue" id="bk-pl">—</span></div>
@@ -1174,26 +1185,42 @@ function liveCalc(){
   const mg = netto>0?netto-costoTot:null;
   const mgp= netto>0&&mg!=null?(mg/netto)*100:null;
 
-  // meter
+  // meter — mostra FC solo ingredienti sulla barra, FC totale accanto
+  const fciTotMeter = lordo>0?((totL+cfApp)/lordo)*100:null;
   if(fci!=null){
     const bar=document.getElementById('fc-bar');
     bar.style.width=Math.min(fci,100)+'%';
     bar.style.background=fcColor(fci);
     document.getElementById('fc-pct-big').textContent=fci.toFixed(1)+'%';
     document.getElementById('fc-pct-big').style.color=fcColor(fci);
+    document.getElementById('fc-pct-tot').textContent=fciTotMeter!=null?fciTotMeter.toFixed(1)+'%':'—';
+    document.getElementById('fc-pct-tot').style.color=fciTotMeter!=null?fcColor(fciTotMeter):'var(--grey)';
   } else {
     document.getElementById('fc-bar').style.width='0%';
     document.getElementById('fc-pct-big').textContent='—';
     document.getElementById('fc-pct-big').style.color='var(--grey)';
+    document.getElementById('fc-pct-tot').textContent='—';
+    document.getElementById('fc-pct-tot').style.color='var(--grey)';
   }
+
+  const fciIng = lordo>0?(totL/lordo)*100:null;       // FC solo ingredienti (lordo/lordo)
+  const fciTot = lordo>0?((totL+cfApp)/lordo)*100:null; // FC totale con fissi
 
   document.getElementById('r-cl').textContent  = totL>0?'€'+totL.toFixed(2):'—';
   document.getElementById('r-cf').textContent  = cfApp>0?'€'+cfApp.toFixed(2):'—';
+  document.getElementById('r-fci').textContent  = fciIng!=null?fciIng.toFixed(1)+'%':'—';
+  document.getElementById('r-fci').style.color  = fciIng!=null?fcColor(fciIng):'var(--grey)';
+  document.getElementById('r-fctot').textContent = fciTot!=null?fciTot.toFixed(1)+'%':'—';
+  document.getElementById('r-fctot').style.color = fciTot!=null?fcColor(fciTot):'var(--grey)';
   document.getElementById('r-mg').textContent  = mg!=null?'€'+mg.toFixed(2):'—';
   document.getElementById('r-mgp').textContent = mgp!=null?mgp.toFixed(1)+'%':'—';
 
   document.getElementById('bk-cl').textContent = totL>0?'€'+totL.toFixed(2):'—';
   document.getElementById('bk-cf').textContent = cfApp>0?'€'+cfApp.toFixed(2):'—';
+  document.getElementById('bk-fci').textContent = fci!=null?fci.toFixed(1)+'%':'—';
+  document.getElementById('bk-fci').style.color = fci!=null?fcColor(fci):'var(--grey)';
+  document.getElementById('bk-fctot').textContent = fciTotMeter!=null?fciTotMeter.toFixed(1)+'%':'—';
+  document.getElementById('bk-fctot').style.color = fciTotMeter!=null?fcColor(fciTotMeter):'var(--grey)';
   document.getElementById('bk-pn').textContent = netto>0?'€'+netto.toFixed(2):'—';
   document.getElementById('bk-iv').textContent = ivaEur>0?'€'+ivaEur.toFixed(2):'—';
   document.getElementById('bk-pl').textContent = lordo>0?'€'+lordo.toFixed(2):'—';
