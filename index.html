@@ -955,7 +955,7 @@ function recalcAllRecipes(){
       totN+=rN; totL+=rL;
     });
     const cfApp=cfPerMin()*tempo;
-    const costoTot=totN+cfApp;
+    const costoTot=totL+cfApp;
     const fci=lordo>0?(totL/lordo)*100:null;
     const mg=netto>0?netto-costoTot:null;
     const mgp=netto>0&&mg!=null?(mg/netto)*100:null;
@@ -1168,7 +1168,7 @@ function liveCalc(){
   });
 
   const cfApp = cfPerMin()*tempo;
-  const costoTot = totN+cfApp;
+  const costoTot = totL+cfApp;
   const fc = netto>0?(totN/netto)*100:null;
   const fci= lordo>0?(totL/lordo)*100:null;
   const mg = netto>0?netto-costoTot:null;
@@ -1216,7 +1216,7 @@ function saveRecipe(){
   let totL=0,totN=0;
   ings.forEach(i=>{const rN=(i.qty/1000)*i.costoL;totN+=rN;totL+=rN*(1+i.iva);});
   const cfApp=cfPerMin()*tempo;
-  const costoTot=totN+cfApp;
+  const costoTot=totL+cfApp;
   const fci=lordo>0?(totL/lordo)*100:null;
   const mg=netto>0?netto-costoTot:null;
   const mgp=netto>0&&mg!=null?(mg/netto)*100:null;
