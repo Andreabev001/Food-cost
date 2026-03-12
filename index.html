@@ -375,6 +375,7 @@ body {
 .cf-sum-item .val { font-size: 20px; font-weight: 900; }
 .cf-sum-item .lbl { font-size: 11px; opacity: .8; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -601,6 +602,12 @@ body {
     <div class="topbar-title"><span>Analisi</span></div>
     <div class="topbar-sub">Panoramica del tuo menu</div>
   </div>
+  <div style="padding:12px 16px 0;display:flex;gap:8px">
+    <button onclick="exportExcel()" style="flex:1;background:#1D6F42;color:white;border:none;border-radius:12px;padding:12px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer">📊 Excel</button>
+    <button onclick="exportCSV()" style="flex:1;background:#0072C6;color:white;border:none;border-radius:12px;padding:12px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer">📋 CSV</button>
+    <button onclick="exportPDF()" style="flex:1;background:#E8342A;color:white;border:none;border-radius:12px;padding:12px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer">📄 PDF</button>
+  </div>
+
   <div class="modal-body" style="display:block;padding-top:16px">
 
     <div class="form-section">
@@ -1423,6 +1430,139 @@ function simBE(){
   const r=document.getElementById('sim-risultato');
   r.textContent=(risultato>=0?'+ ':'- ')+'€'+Math.abs(risultato).toFixed(0);
   r.style.color=risultato>=0?'var(--green)':'var(--red)';
+}
+
+// ── EXPORT ──
+function getExportRows(){
+  return recipes.map(r => ({
+    'Piatto': r.nome||'',
+    'Categoria': r.cat||'',
+    'Prezzo lordo (€)': (r.lordo||0).toFixed(2),
+    'IVA vendita (%)': ((r.ivaR||0.1)*100).toFixed(0)+'%',
+    'Prezzo netto (€)': (r.netto||0).toFixed(2),
+    'Costo ingredienti lordo (€)': (r.totIngL||0).toFixed(3),
+    'Costi fissi applicati (€)': (r.cfApp||0).toFixed(3),
+    'FC solo ingredienti (%)': r.fci!=null?r.fci.toFixed(1)+'%':'—',
+    'FC con fissi % (reale)': r.lordo>0?(((r.totIngL||0)+(r.cfApp||0))/r.lordo*100).toFixed(1)+'%':'—',
+    'Margine netto (€)': r.mg!=null?r.mg.toFixed(2):'—',
+    'Margine (%)': r.mgp!=null?r.mgp.toFixed(1)+'%':'—',
+    'Tempo (min)': r.tempo||0,
+    'Ingredienti': (r.ings||[]).map(i=>i.nome+(i.qty?' '+i.qty+(i.unit==='pz'?' pz':i.unit==='L'?' ml':' g'):'')).join(', ')
+  }));
+}
+
+function exportExcel(){
+  if(!recipes.length){alert('Nessun piatto da esportare!');return;}
+  if(typeof XLSX==='undefined'){alert('Libreria Excel non caricata. Prova il CSV!');return;}
+  const rows = getExportRows();
+  const ws = XLSX.utils.json_to_sheet(rows);
+  // Column widths
+  ws['!cols'] = [
+    {wch:28},{wch:12},{wch:16},{wch:12},{wch:16},{wch:22},{wch:22},
+    {wch:22},{wch:22},{wch:18},{wch:12},{wch:12},{wch:38}
+  ];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Food Cost');
+
+  // Aggiungi foglio costi fissi
+  const cfRows = cfItems.map(c=>({'Voce':c.nome,'Categoria':c.cat,'Costo mensile (€)':c.mese.toFixed(2),'€/min':(c.mese/(cfConf.giorni*cfConf.ore*60)).toFixed(5)}));
+  cfRows.push({'Voce':'TOTALE','Categoria':'','Costo mensile (€)':cfTotal().toFixed(2),'€/min':cfPerMin().toFixed(5)});
+  const ws2 = XLSX.utils.json_to_sheet(cfRows);
+  ws2['!cols']=[{wch:20},{wch:14},{wch:18},{wch:12}];
+  XLSX.utils.book_append_sheet(wb, ws2, 'Costi Fissi');
+
+  XLSX.writeFile(wb, 'FoodCost_'+new Date().toISOString().slice(0,10)+'.xlsx');
+}
+
+function exportCSV(){
+  if(!recipes.length){alert('Nessun piatto da esportare!');return;}
+  const rows = getExportRows();
+  const headers = Object.keys(rows[0]);
+  const csvContent = [
+    headers.join(';'),
+    ...rows.map(r=>headers.map(h=>{
+      const v = String(r[h]||'').replace(/"/g,'""');
+      return v.includes(';')||v.includes('"')||v.includes('
+')?'"'+v+'"':v;
+    }).join(';'))
+  ].join('
+');
+  const blob = new Blob(['﻿'+csvContent],{type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'FoodCost_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+}
+
+function exportPDF(){
+  if(!recipes.length){alert('Nessun piatto da esportare!');return;}
+  const date = new Date().toLocaleDateString('it-IT');
+  const cfTot = cfTotal();
+  const rows = recipes.map(r=>{
+    const fctot = r.lordo>0?(((r.totIngL||0)+(r.cfApp||0))/r.lordo*100):null;
+    return `<tr>
+      <td>${r.nome}</td>
+      <td>${r.cat}</td>
+      <td>€${(r.lordo||0).toFixed(2)}</td>
+      <td>€${(r.totIngL||0).toFixed(2)}</td>
+      <td>€${(r.cfApp||0).toFixed(2)}</td>
+      <td>${r.fci!=null?r.fci.toFixed(1)+'%':'—'}</td>
+      <td>${fctot!=null?fctot.toFixed(1)+'%':'—'}</td>
+      <td>${r.mg!=null?'€'+r.mg.toFixed(2):'—'}</td>
+      <td>${r.mgp!=null?r.mgp.toFixed(1)+'%':'—'}</td>
+    </tr>`;
+  }).join('');
+
+  const cfRows = cfItems.map(c=>`<tr><td>${c.nome}</td><td>${c.cat}</td><td>€${c.mese.toFixed(2)}</td></tr>`).join('');
+
+  const win = window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>Food Cost Report - ${date}</title>
+  <style>
+    body{font-family:Arial,sans-serif;font-size:11px;margin:20px;color:#1C1C1E}
+    h1{color:#E8342A;font-size:20px;margin-bottom:4px}
+    h2{font-size:13px;color:#555;margin:18px 0 8px;border-bottom:2px solid #E8342A;padding-bottom:4px}
+    table{width:100%;border-collapse:collapse;margin-bottom:16px}
+    th{background:#E8342A;color:white;padding:6px 8px;text-align:left;font-size:10px}
+    td{padding:5px 8px;border-bottom:1px solid #eee}
+    tr:nth-child(even) td{background:#F9F9F9}
+    .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+    .sum-box{background:#F2F2F7;border-radius:8px;padding:10px;text-align:center}
+    .sum-val{font-size:16px;font-weight:bold;color:#E8342A}
+    .sum-lbl{font-size:9px;color:#8E8E93;text-transform:uppercase;margin-top:2px}
+    @media print{body{margin:10px}}
+  </style></head><body>
+  <h1>🍽 Food Cost Report</h1>
+  <p style="color:#8E8E93;margin-bottom:16px">Generato il ${date} · ${recipes.length} piatti</p>
+
+  <div class="summary">
+    <div class="sum-box"><div class="sum-val">${recipes.length}</div><div class="sum-lbl">Piatti totali</div></div>
+    <div class="sum-box"><div class="sum-val">${recipes.filter(r=>r.fci!=null).length?(recipes.filter(r=>r.fci!=null).reduce((s,r)=>s+r.fci,0)/recipes.filter(r=>r.fci!=null).length).toFixed(1)+'%':'—'}</div><div class="sum-lbl">FC medio ingredienti</div></div>
+    <div class="sum-box"><div class="sum-val">${recipes.filter(r=>r.mg!=null).length?'€'+(recipes.filter(r=>r.mg!=null).reduce((s,r)=>s+r.mg,0)/recipes.filter(r=>r.mg!=null).length).toFixed(2):'—'}</div><div class="sum-lbl">Margine medio</div></div>
+    <div class="sum-box"><div class="sum-val">€${cfTot.toFixed(0)}</div><div class="sum-lbl">Costi fissi/mese</div></div>
+  </div>
+
+  <h2>📋 Dettaglio Piatti</h2>
+  <table>
+    <thead><tr>
+      <th>Piatto</th><th>Cat.</th><th>Prezzo</th>
+      <th>Ing. lordo</th><th>Costi fissi</th>
+      <th>FC ing.</th><th>FC reale</th>
+      <th>Margine €</th><th>Margine %</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+
+  <h2>💰 Costi Fissi Mensili</h2>
+  <table>
+    <thead><tr><th>Voce</th><th>Categoria</th><th>Costo mensile</th></tr></thead>
+    <tbody>${cfRows}<tr style="font-weight:bold"><td>TOTALE</td><td></td><td>€${cfTot.toFixed(2)}</td></tr></tbody>
+  </table>
+
+
+  </body></html>`);
+  win.document.close();
+  setTimeout(function(){win.print();},800);
 }
 
 // ── INIT ──
