@@ -1,0 +1,1642 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Food Cost</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+:root {
+  --red: #E8342A;
+  --red-l: #FF4A3F;
+  --dark: #1C1C1E;
+  --grey: #8E8E93;
+  --grey-l: #C7C7CC;
+  --bg: #F2F2F7;
+  --white: #FFFFFF;
+  --green: #34C759;
+  --orange: #FF9500;
+  --blue: #007AFF;
+  --card-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+
+body {
+  font-family: 'Nunito', sans-serif;
+  background: var(--bg);
+  color: var(--dark);
+  min-height: 100vh;
+  max-width: 430px;
+  margin: 0 auto;
+  padding-bottom: 90px;
+}
+
+/* ── TOP BAR ── */
+.topbar {
+  background: var(--white);
+  padding: 16px 20px 12px;
+  position: sticky; top: 0; z-index: 100;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+.topbar-title { font-size: 22px; font-weight: 900; color: var(--dark); }
+.topbar-title span { color: var(--red); }
+.topbar-sub { font-size: 13px; color: var(--grey); margin-top: 2px; }
+
+/* ── SEARCH ── */
+.search-wrap { padding: 12px 16px 8px; }
+.search-box {
+  background: var(--white);
+  border-radius: 12px;
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px;
+  box-shadow: var(--card-shadow);
+}
+.search-box input {
+  border: none; outline: none; background: transparent;
+  font-family: 'Nunito', sans-serif; font-size: 15px; color: var(--dark);
+  width: 100%;
+}
+.search-box input::placeholder { color: var(--grey-l); }
+.search-icon { font-size: 16px; color: var(--grey); }
+
+/* ── FILTER TABS ── */
+.filter-row {
+  display: flex; gap: 8px;
+  padding: 4px 16px 12px;
+  overflow-x: auto; scrollbar-width: none;
+}
+.filter-row::-webkit-scrollbar { display: none; }
+.ftab {
+  background: var(--white); border: none;
+  padding: 7px 16px; border-radius: 20px;
+  font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 700;
+  color: var(--grey); cursor: pointer; white-space: nowrap;
+  box-shadow: var(--card-shadow); transition: all .2s;
+}
+.ftab.active { background: var(--red); color: var(--white); }
+
+/* ── STATS ROW ── */
+.stats-row {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px; padding: 0 16px 16px;
+}
+.stat-card {
+  background: var(--white);
+  border-radius: 14px;
+  padding: 12px 10px;
+  text-align: center;
+  box-shadow: var(--card-shadow);
+}
+.stat-val { font-size: 18px; font-weight: 900; color: var(--dark); }
+.stat-val.red { color: var(--red); }
+.stat-val.green { color: var(--green); }
+.stat-lbl { font-size: 10px; color: var(--grey); font-weight: 700; text-transform: uppercase; letter-spacing: .4px; margin-top: 2px; }
+
+/* ── SECTION LABEL ── */
+.section-lbl {
+  font-size: 13px; font-weight: 800; color: var(--grey);
+  text-transform: uppercase; letter-spacing: .5px;
+  padding: 0 16px 8px;
+}
+
+/* ── RECIPE CARDS ── */
+.cards { padding: 0 16px; display: grid; gap: 12px; }
+
+.rcard {
+  background: var(--white);
+  border-radius: 16px;
+  box-shadow: var(--card-shadow);
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px;
+  cursor: pointer;
+  transition: transform .15s, box-shadow .15s;
+  position: relative;
+  animation: fadeUp .3s ease both;
+}
+.rcard:active { transform: scale(.98); }
+
+@keyframes fadeUp {
+  from { opacity:0; transform: translateY(10px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+.rcard-img {
+  width: 64px; height: 64px; border-radius: 12px;
+  background: var(--bg); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; overflow: hidden;
+}
+.rcard-img img { width:100%; height:100%; object-fit:cover; border-radius:12px; }
+
+.rcard-body { flex: 1; min-width: 0; }
+.rcard-name { font-size: 15px; font-weight: 800; color: var(--dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rcard-cat { font-size: 11px; font-weight: 700; color: var(--red); text-transform: uppercase; letter-spacing: .4px; margin: 2px 0 6px; }
+
+.rcard-nums { display: flex; gap: 12px; align-items: center; }
+.rcard-price { font-size: 14px; font-weight: 700; color: var(--dark); }
+.rcard-price span { font-size: 11px; color: var(--grey); font-weight: 600; }
+
+.fc-pill {
+  font-size: 11px; font-weight: 800;
+  padding: 3px 8px; border-radius: 20px;
+}
+.fc-good { background: rgba(52,199,89,.12); color: var(--green); }
+.fc-warn { background: rgba(255,149,0,.12); color: var(--orange); }
+.fc-bad  { background: rgba(232,52,42,.12);  color: var(--red); }
+
+.rcard-right { text-align: right; flex-shrink: 0; }
+.rcard-fc-val { font-size: 15px; font-weight: 900; color: var(--dark); }
+.rcard-fc-lbl { font-size: 10px; color: var(--grey); font-weight: 600; }
+.rcard-margine { font-size: 13px; font-weight: 800; color: var(--green); margin-top: 2px; }
+
+.rcard-actions {
+  position: absolute; right: 14px; top: 14px;
+  display: flex; gap: 6px; opacity: 0;
+  transition: opacity .2s;
+}
+.rcard.show-actions .rcard-actions { opacity: 1; }
+.act-btn {
+  width: 28px; height: 28px; border-radius: 8px;
+  border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+.act-edit { background: rgba(0,122,255,.12); color: var(--blue); }
+.act-del  { background: rgba(232,52,42,.12);  color: var(--red); }
+
+/* ── EMPTY STATE ── */
+.empty {
+  text-align: center; padding: 48px 20px;
+  color: var(--grey);
+}
+.empty-icon { font-size: 56px; margin-bottom: 12px; }
+.empty-title { font-size: 17px; font-weight: 800; color: var(--dark); margin-bottom: 6px; }
+.empty-sub { font-size: 14px; line-height: 1.5; }
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 430px;
+  background: var(--white);
+  border-top: 1px solid rgba(0,0,0,0.08);
+  display: flex; align-items: center;
+  padding: 8px 0 20px;
+  z-index: 100;
+}
+.nav-btn {
+  flex: 1; background: none; border: none; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 4px 0;
+}
+.nav-icon { font-size: 22px; line-height: 1; }
+.nav-lbl { font-size: 10px; font-weight: 700; color: var(--grey); font-family: 'Nunito', sans-serif; }
+.nav-btn.active .nav-lbl { color: var(--red); }
+.nav-btn.active .nav-icon { filter: none; }
+
+.nav-add {
+  width: 52px; height: 52px; border-radius: 16px;
+  background: var(--red); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; color: white; margin-top: -20px;
+  box-shadow: 0 4px 16px rgba(232,52,42,.4);
+  transition: transform .15s, box-shadow .15s;
+}
+.nav-add:active { transform: scale(.93); }
+
+/* ── MODAL OVERLAY ── */
+.overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.45);
+  z-index: 200; display: none; align-items: flex-end;
+  backdrop-filter: blur(3px);
+}
+.overlay.open { display: flex; }
+
+.modal {
+  background: var(--white);
+  border-radius: 24px 24px 0 0;
+  width: 100%; max-width: 430px;
+  margin: 0 auto;
+  padding: 0 0 40px;
+  max-height: 92vh;
+  overflow-y: auto;
+  animation: slideUp .25s ease;
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.modal-handle {
+  width: 36px; height: 4px; background: var(--grey-l);
+  border-radius: 2px; margin: 12px auto 0;
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px 0;
+}
+.modal-title { font-size: 18px; font-weight: 900; color: var(--dark); }
+.modal-close {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--bg); border: none; cursor: pointer;
+  font-size: 16px; display: flex; align-items: center; justify-content: center;
+}
+
+.modal-body { padding: 16px 20px 0; }
+
+/* ── FORM ── */
+.form-section {
+  background: var(--bg); border-radius: 14px;
+  padding: 14px; margin-bottom: 14px;
+}
+.form-section-title {
+  font-size: 11px; font-weight: 800; color: var(--grey);
+  text-transform: uppercase; letter-spacing: .5px;
+  margin-bottom: 10px;
+}
+.field { margin-bottom: 12px; }
+.field:last-child { margin-bottom: 0; }
+.field label { font-size: 12px; font-weight: 700; color: var(--grey); display: block; margin-bottom: 5px; }
+.field input, .field select {
+  width: 100%; background: var(--white);
+  border: 1.5px solid rgba(0,0,0,0.08);
+  border-radius: 10px; padding: 11px 14px;
+  font-family: 'Nunito', sans-serif; font-size: 15px;
+  font-weight: 600; color: var(--dark); outline: none;
+  transition: border-color .2s;
+}
+.field input:focus, .field select:focus { border-color: var(--red); }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.field-row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+
+/* RISULTATI LIVE */
+.results-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 8px; margin-bottom: 14px;
+}
+.res-box {
+  background: var(--bg); border-radius: 12px;
+  padding: 12px; text-align: center;
+}
+.res-box.highlight { background: rgba(232,52,42,.08); }
+.res-box.green-box { background: rgba(52,199,89,.08); }
+.res-box.blue-box  { background: rgba(0,122,255,.08); }
+.res-val { font-size: 18px; font-weight: 900; color: var(--dark); }
+.res-val.red   { color: var(--red); }
+.res-val.green { color: var(--green); }
+.res-val.blue  { color: var(--blue); }
+.res-val.orange{ color: var(--orange); }
+.res-lbl { font-size: 10px; font-weight: 700; color: var(--grey); text-transform: uppercase; letter-spacing:.3px; margin-top: 2px; }
+
+/* FC METER */
+.fc-meter-wrap { margin-bottom: 14px; }
+.fc-meter-bar-bg { height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; }
+.fc-meter-bar { height: 100%; border-radius: 4px; transition: width .5s, background .3s; }
+.fc-meter-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--grey); font-weight: 700; margin-top: 4px; }
+
+/* ING TABLE */
+.ing-list { display: grid; gap: 8px; margin-bottom: 10px; }
+.ing-row {
+  background: var(--white); border-radius: 12px;
+  padding: 10px 12px; display: grid;
+  grid-template-columns: 1fr 70px 50px 24px;
+  gap: 6px; align-items: center;
+}
+.ing-row input, .ing-row select {
+  border: none; background: var(--bg);
+  border-radius: 8px; padding: 6px 8px;
+  font-family: 'Nunito', sans-serif; font-size: 13px;
+  font-weight: 600; color: var(--dark); outline: none; width: 100%;
+}
+.ing-del { background: none; border: none; font-size: 16px; color: var(--grey-l); cursor: pointer; padding: 0; }
+.ing-del:active { color: var(--red); }
+
+.add-ing-btn {
+  width: 100%; background: none; border: 1.5px dashed var(--grey-l);
+  border-radius: 12px; padding: 11px; cursor: pointer;
+  font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 700;
+  color: var(--grey); transition: all .2s;
+}
+.add-ing-btn:active { border-color: var(--red); color: var(--red); }
+
+/* IVA breakdown */
+.iva-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 6px 0; border-bottom: 1px solid var(--bg);
+  font-size: 13px;
+}
+.iva-row:last-child { border-bottom: none; font-weight: 800; font-size: 14px; }
+.iva-row .lbl { color: var(--grey); font-weight: 600; }
+.iva-row .val { font-weight: 700; color: var(--dark); }
+.iva-row .val.blue { color: var(--blue); }
+.iva-row .val.green { color: var(--green); }
+
+/* SAVE BTN */
+.save-btn {
+  width: 100%; background: var(--red); border: none;
+  border-radius: 14px; padding: 16px;
+  font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 900;
+  color: white; cursor: pointer; margin-top: 4px;
+  box-shadow: 0 4px 16px rgba(232,52,42,.35);
+  transition: transform .15s;
+}
+.save-btn:active { transform: scale(.98); }
+
+/* ── CF PANEL ── */
+.cf-list { padding: 0 16px; display: grid; gap: 10px; }
+.cf-card {
+  background: var(--white); border-radius: 14px;
+  box-shadow: var(--card-shadow);
+  padding: 14px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.cf-left { display: flex; align-items: center; gap: 12px; }
+.cf-icon {
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; font-size: 20px;
+}
+.cf-name { font-size: 15px; font-weight: 800; color: var(--dark); }
+.cf-cat  { font-size: 11px; color: var(--grey); font-weight: 600; }
+.cf-val  { font-size: 16px; font-weight: 900; color: var(--dark); }
+.cf-sub  { font-size: 10px; color: var(--grey); font-weight: 600; text-align: right; }
+
+/* TABS panel */
+.page { display: none; }
+.page.active { display: block; }
+
+/* Costi fissi summary */
+.cf-summary {
+  margin: 0 16px 16px;
+  background: var(--red); border-radius: 16px;
+  padding: 16px; color: white;
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.cf-sum-item .val { font-size: 20px; font-weight: 900; }
+.cf-sum-item .lbl { font-size: 11px; opacity: .8; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<!-- ── PAGE: I MIEI PIATTI ── -->
+<div id="page-piatti" class="page active">
+  <div class="topbar">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div class="topbar-title">I miei <span>piatti</span></div>
+        <div class="topbar-sub" id="piatti-count">Nessun piatto ancora</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div id="sync-status" style="font-size:11px;font-weight:700;color:var(--grey)">⚪ locale</div>
+        <button onclick="syncNow()" id="sync-btn" style="background:var(--blue);color:white;border:none;border-radius:10px;padding:7px 12px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;cursor:pointer">☁️ Sync</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="search-wrap">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="search-input" placeholder="Cerca ricette..." oninput="filterCards()">
+    </div>
+  </div>
+
+  <div class="filter-row" id="filter-row">
+    <button class="ftab active" onclick="setFilter('tutti',this)">Tutti</button>
+    <button class="ftab" onclick="setFilter('Antipasto',this)">Antipasto</button>
+    <button class="ftab" onclick="setFilter('Primo',this)">Primo</button>
+    <button class="ftab" onclick="setFilter('Secondo',this)">Secondo</button>
+    <button class="ftab" onclick="setFilter('Contorno',this)">Contorno</button>
+    <button class="ftab" onclick="setFilter('Dessert',this)">Dessert</button>
+    <button class="ftab" onclick="setFilter('Bevanda',this)">Bevanda</button>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-val" id="stat-tot">0</div>
+      <div class="stat-lbl">Piatti</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val red" id="stat-fc">—</div>
+      <div class="stat-lbl">FC medio</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val green" id="stat-mg">—</div>
+      <div class="stat-lbl">Margine</div>
+    </div>
+  </div>
+
+  <div class="section-lbl" id="cards-label">Ricette</div>
+  <div class="cards" id="cards-container"></div>
+</div>
+
+<!-- ── PAGE: COSTI FISSI ── -->
+<div id="page-cf" class="page">
+  <div class="topbar">
+    <div class="topbar-title">Costi <span>fissi</span></div>
+    <div class="topbar-sub">Utenze e spese mensili</div>
+  </div>
+
+  <div style="height:16px"></div>
+
+  <div class="cf-summary" id="cf-summary">
+    <div class="cf-sum-item">
+      <div class="val" id="cf-tot-val">€ 0</div>
+      <div class="lbl">Totale/mese</div>
+    </div>
+    <div class="cf-sum-item">
+      <div class="val" id="cf-min-val">—</div>
+      <div class="lbl">€/minuto</div>
+    </div>
+    <div class="cf-sum-item">
+      <div class="val" id="cf-giorni-val">26</div>
+      <div class="lbl">Giorni/mese</div>
+    </div>
+    <div class="cf-sum-item">
+      <div class="val" id="cf-ore-val">8h</div>
+      <div class="lbl">Ore/giorno</div>
+    </div>
+  </div>
+
+  <div class="section-lbl">Voci di costo</div>
+  <div class="cf-list" id="cf-list"></div>
+  <div style="height:12px"></div>
+</div>
+
+<!-- ── BOTTOM NAV ── -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" id="nav-piatti" onclick="showPage('piatti')">
+    <span class="nav-icon">🍽️</span>
+    <span class="nav-lbl" style="color:var(--red)">Piatti</span>
+  </button>
+  <button class="nav-btn" id="nav-ing" onclick="showPage('ing')">
+    <span class="nav-icon">🧺</span>
+    <span class="nav-lbl">Ingredienti</span>
+  </button>
+  <button class="nav-add" onclick="openModal()">＋</button>
+  <button class="nav-btn" id="nav-cf" onclick="showPage('cf')">
+    <span class="nav-icon">💰</span>
+    <span class="nav-lbl">Costi fissi</span>
+  </button>
+  <button class="nav-btn" id="nav-stats" onclick="showPage('stats')">
+    <span class="nav-icon">📊</span>
+    <span class="nav-lbl">Analisi</span>
+  </button>
+</nav>
+
+<!-- ── PAGE: INGREDIENTI ── -->
+<div id="page-ing" class="page">
+  <div class="topbar">
+    <div class="topbar-title">🧺 <span>Ingredienti</span></div>
+    <div class="topbar-sub" id="ing-count">Nessun ingrediente</div>
+  </div>
+
+  <div class="search-wrap">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="ing-search" placeholder="Cerca ingrediente..." oninput="renderIngPage()">
+    </div>
+  </div>
+
+  <div style="padding:0 16px 12px;display:flex;gap:8px">
+    <button onclick="openIngModal()" style="flex:1;background:var(--red);color:white;border:none;border-radius:12px;padding:12px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;cursor:pointer">+ Nuovo ingrediente</button>
+  </div>
+
+  <div class="section-lbl" id="ing-list-label">Ingredienti</div>
+  <div style="padding:0 16px;display:grid;gap:10px" id="ing-cards"></div>
+  <div style="height:12px"></div>
+</div>
+
+<!-- ── MODAL: INGREDIENTE ── -->
+<div class="overlay" id="ing-overlay" onclick="closeIngOnBg(event)">
+<div class="modal" id="ing-modal">
+  <div class="modal-handle"></div>
+  <div class="modal-header">
+    <div class="modal-title" id="ing-modal-title">Nuovo ingrediente</div>
+    <button class="modal-close" onclick="closeIngModal()">✕</button>
+  </div>
+  <div class="modal-body">
+    <div class="form-section">
+      <div class="field"><label>Nome ingrediente</label><input id="ing-nome" placeholder="es. Farina 00"></div>
+      <div class="field-row">
+        <div class="field"><label>Categoria</label>
+          <select id="ing-cat">
+            <option>Carni</option><option>Pesce</option><option>Verdure</option>
+            <option>Latticini</option><option>Pasta/Cereali</option><option selected>Altro</option>
+          </select>
+        </div>
+        <div class="field"><label>Unità</label>
+          <select id="ing-unit">
+            <option value="kg">kg (grammi)</option>
+            <option value="L">L (millilitri)</option>
+            <option value="pz">pz (pezzi/unità)</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Costo lordo (€/kg o L)</label><input type="number" id="ing-costo" placeholder="0.00" step="0.01"></div>
+        <div class="field"><label>IVA ingrediente</label>
+          <select id="ing-iva">
+            <option value="4">4%</option>
+            <option value="10" selected>10%</option>
+            <option value="22">22%</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>Fornitore (opzionale)</label><input id="ing-fornitore" placeholder="es. Metro, Makro..."></div>
+    </div>
+
+    <div style="background:rgba(232,52,42,.06);border-radius:12px;padding:14px;margin-bottom:14px" id="ing-usage-wrap" style="display:none">
+      <div style="font-size:11px;font-weight:800;color:var(--red);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Usato in</div>
+      <div id="ing-usage-list" style="font-size:13px;color:var(--dark)"></div>
+    </div>
+
+    <button class="save-btn" onclick="saveIng()">Salva ingrediente</button>
+    <div style="height:8px"></div>
+    <button id="ing-del-btn" onclick="deleteIng()" style="display:none;width:100%;background:none;border:1.5px solid rgba(232,52,42,.3);border-radius:14px;padding:14px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;color:var(--red);cursor:pointer">Elimina ingrediente</button>
+  </div>
+</div>
+</div>
+
+<!-- ── PAGE: CALCOLO RAPIDO ── -->
+<div id="page-calcolo" class="page">
+  <div class="topbar">
+    <div class="topbar-title">Calcolo <span>rapido</span></div>
+    <div class="topbar-sub">Calcola food cost al volo</div>
+  </div>
+  <div class="modal-body" style="display:block;padding-top:16px">
+    <div class="form-section">
+      <div class="form-section-title">Inserisci i valori</div>
+      <div class="field"><label>Costo ingredienti (€)</label><input type="number" id="qc-ci" placeholder="0.00" step="0.01" oninput="quickCalc()"></div>
+      <div class="field-row">
+        <div class="field"><label>Prezzo lordo (€)</label><input type="number" id="qc-pl" placeholder="0.00" step="0.01" oninput="quickCalc()"></div>
+        <div class="field"><label>IVA %</label>
+          <select id="qc-iva" onchange="quickCalc()">
+            <option value="4">4%</option><option value="10" selected>10%</option><option value="22">22%</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="results-grid">
+      <div class="res-box blue-box"><div class="res-val blue" id="qc-pnetto">—</div><div class="res-lbl">Prezzo netto</div></div>
+      <div class="res-box blue-box"><div class="res-val blue" id="qc-iva-eur">—</div><div class="res-lbl">IVA €</div></div>
+      <div class="res-box highlight"><div class="res-val red" id="qc-fc">—</div><div class="res-lbl">Food Cost %</div></div>
+      <div class="res-box green-box"><div class="res-val green" id="qc-mg">—</div><div class="res-lbl">Margine €</div></div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">Calcola prezzo consigliato</div>
+      <div class="field"><label>Costo ingredienti (€)</label><input type="number" id="pc-ci" placeholder="0.00" step="0.01" oninput="priceCalc()"></div>
+      <div class="field-row">
+        <div class="field"><label>Target FC %</label><input type="number" id="pc-fc" value="30" step="1" oninput="priceCalc()"></div>
+        <div class="field"><label>IVA %</label>
+          <select id="pc-iva" onchange="priceCalc()">
+            <option value="4">4%</option><option value="10" selected>10%</option><option value="22">22%</option>
+          </select>
+        </div>
+      </div>
+      <div class="results-grid" style="margin-top:10px;margin-bottom:0">
+        <div class="res-box blue-box"><div class="res-val blue" id="pc-pnetto">—</div><div class="res-lbl">Prezzo netto</div></div>
+        <div class="res-box highlight"><div class="res-val red" id="pc-plordo">—</div><div class="res-lbl">Prezzo lordo</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── PAGE: ANALISI ── -->
+<div id="page-stats" class="page">
+  <div class="topbar">
+    <div class="topbar-title"><span>Analisi</span></div>
+    <div class="topbar-sub">Panoramica del tuo menu</div>
+  </div>
+  <div style="padding:12px 16px 0;display:flex;gap:8px">
+    <button onclick="exportExcel()" style="flex:1;background:#1D6F42;color:white;border:none;border-radius:12px;padding:12px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer">📊 Excel</button>
+    <button onclick="exportCSV()" style="flex:1;background:#0072C6;color:white;border:none;border-radius:12px;padding:12px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer">📋 CSV</button>
+    <button onclick="exportPDF()" style="flex:1;background:#E8342A;color:white;border:none;border-radius:12px;padding:12px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer">📄 PDF</button>
+  </div>
+
+  <div class="modal-body" style="display:block;padding-top:16px">
+
+    <div class="form-section">
+      <div class="form-section-title">Riepilogo</div>
+      <div class="iva-row"><span class="lbl">Totale piatti</span><span class="val" id="an-tot">0</span></div>
+      <div class="iva-row"><span class="lbl">Food cost medio</span><span class="val red" id="an-fc">—</span></div>
+      <div class="iva-row"><span class="lbl">Margine medio €</span><span class="val green" id="an-mg">—</span></div>
+      <div class="iva-row"><span class="lbl">Prezzo medio</span><span class="val" id="an-prezzo">—</span></div>
+      <div class="iva-row"><span class="lbl">Costi fissi/mese</span><span class="val blue" id="an-cf">—</span></div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">Piatti per FC%</div>
+      <div class="iva-row"><span class="lbl">🟢 Ottimo (&lt;25%)</span><span class="val green" id="an-good">0</span></div>
+      <div class="iva-row"><span class="lbl">🟡 Accettabile (25-35%)</span><span class="val" style="color:var(--orange)" id="an-warn">0</span></div>
+      <div class="iva-row"><span class="lbl">🔴 Alto (&gt;35%)</span><span class="val red" id="an-bad">0</span></div>
+    </div>
+
+    <div style="background:var(--dark);border-radius:16px;padding:16px;margin-bottom:14px;color:white">
+      <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;opacity:.6;margin-bottom:12px">📍 Break Even Point</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <div style="background:rgba(255,255,255,.08);border-radius:12px;padding:12px;text-align:center">
+          <div style="font-size:22px;font-weight:900;color:#FF9500" id="be-coperti">—</div>
+          <div style="font-size:10px;font-weight:700;opacity:.6;text-transform:uppercase;letter-spacing:.3px;margin-top:2px">Coperti/mese</div>
+        </div>
+        <div style="background:rgba(255,255,255,.08);border-radius:12px;padding:12px;text-align:center">
+          <div style="font-size:22px;font-weight:900;color:#34C759" id="be-fatturato">—</div>
+          <div style="font-size:10px;font-weight:700;opacity:.6;text-transform:uppercase;letter-spacing:.3px;margin-top:2px">Fatturato min.</div>
+        </div>
+        <div style="background:rgba(255,255,255,.08);border-radius:12px;padding:12px;text-align:center">
+          <div style="font-size:22px;font-weight:900;color:#007AFF" id="be-giorno">—</div>
+          <div style="font-size:10px;font-weight:700;opacity:.6;text-transform:uppercase;letter-spacing:.3px;margin-top:2px">Coperti/giorno</div>
+        </div>
+        <div style="background:rgba(255,255,255,.08);border-radius:12px;padding:12px;text-align:center">
+          <div style="font-size:22px;font-weight:900;color:#FF4A3F" id="be-margunit">—</div>
+          <div style="font-size:10px;font-weight:700;opacity:.6;text-transform:uppercase;letter-spacing:.3px;margin-top:2px">Marg. contrib./cop.</div>
+        </div>
+      </div>
+      <div style="margin-bottom:4px">
+        <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;opacity:.7;margin-bottom:5px">
+          <span>Coperti stimati: <span id="be-cop-stim">—</span></span>
+          <span id="be-status-lbl">—</span>
+        </div>
+        <div style="height:8px;background:rgba(255,255,255,.12);border-radius:4px;overflow:hidden">
+          <div id="be-bar" style="height:100%;border-radius:4px;width:0%;background:#FF9500;transition:width .5s,background .3s"></div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;font-size:10px;opacity:.4;margin-top:4px">
+          <span id="be-bar-label">BEP</span>
+        </div>
+      </div>
+      <div style="font-size:11px;opacity:.4;margin-top:8px">Formula: Costi fissi ÷ margine di contribuzione medio/coperto</div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">Parametri simulazione</div>
+      <div class="field-row">
+        <div class="field"><label>Coperti stimati/mese</label><input type="number" id="be-input-coperti" placeholder="500" oninput="renderStats()"></div>
+        <div class="field"><label>Prezzo medio (€)</label><input type="number" id="be-input-prezzo" placeholder="auto" step="0.01" oninput="renderStats()"></div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">🧮 Simulatore mensile</div>
+      <div class="field-row">
+        <div class="field"><label>Coperti al giorno</label><input type="number" id="be-sim-coperti" placeholder="es. 40" min="1" oninput="simBE()"></div>
+        <div class="field"><label>Scontrino medio (€)</label><input type="number" id="be-sim-scontrino" placeholder="es. 25.00" step="0.01" oninput="simBE()"></div>
+      </div>
+      <div class="field"><label>FC medio stimato (%)</label><input type="number" id="be-sim-fc" placeholder="30" value="30" step="1" oninput="simBE()"></div>
+      <div style="background:var(--bg);border-radius:12px;padding:12px;margin-top:4px">
+        <div class="iva-row"><span class="lbl">Fatturato mensile</span><span class="val" id="sim-fatturato">—</span></div>
+        <div class="iva-row"><span class="lbl">Costo variabile (ing.)</span><span class="val red" id="sim-cv">—</span></div>
+        <div class="iva-row"><span class="lbl">Margine di contribuzione</span><span class="val" id="sim-mc">—</span></div>
+        <div class="iva-row"><span class="lbl">Costi fissi/mese</span><span class="val blue" id="sim-cf">—</span></div>
+        <div style="border-top:2px solid var(--grey-l);margin-top:8px;padding-top:10px;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:13px;font-weight:800;color:var(--dark)">Risultato mensile</span>
+          <span style="font-size:18px;font-weight:900" id="sim-risultato">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">Riferimento FC per categoria</div>
+      <div class="iva-row"><span class="lbl">Fine dining</span><span class="val">20–28%</span></div>
+      <div class="iva-row"><span class="lbl">Trattoria / Casual</span><span class="val">28–35%</span></div>
+      <div class="iva-row"><span class="lbl">Pizzeria</span><span class="val">30–38%</span></div>
+      <div class="iva-row"><span class="lbl">Bar / Bevande</span><span class="val">18–25%</span></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── MODAL: NUOVA/MODIFICA RICETTA ── -->
+<div class="overlay" id="overlay" onclick="closeOnBg(event)">
+<div class="modal" id="modal">
+  <div class="modal-handle"></div>
+  <div class="modal-header">
+    <div class="modal-title" id="modal-title">Nuovo piatto</div>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+  </div>
+  <div class="modal-body">
+
+    <div class="form-section">
+      <div class="form-section-title">Info piatto</div>
+      <div class="field"><label>Nome piatto</label><input id="f-nome" placeholder="es. Spaghetti alla Carbonara" oninput="liveCalc()"></div>
+      <div class="field-row">
+        <div class="field"><label>Categoria</label>
+          <select id="f-cat" onchange="liveCalc()">
+            <option>Antipasto</option><option selected>Primo</option><option>Secondo</option>
+            <option>Contorno</option><option>Dessert</option><option>Bevanda</option>
+          </select>
+        </div>
+        <div class="field"><label>Tempo (min)</label><input type="number" id="f-tempo" placeholder="10" min="0" oninput="liveCalc()"></div>
+      </div>
+    </div>
+
+    <div class="form-section" style="background:rgba(0,122,255,.06)">
+      <div class="form-section-title" style="color:var(--blue)">Prezzo &amp; IVA</div>
+      <div class="field-row">
+        <div class="field"><label>Prezzo lordo (€ con IVA)</label><input type="number" id="f-lordo" placeholder="12.00" step="0.01" oninput="liveCalc()"></div>
+        <div class="field"><label>Aliquota IVA</label>
+          <select id="f-iva" onchange="liveCalc()">
+            <option value="4">4%</option><option value="10" selected>10%</option><option value="22">22%</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Prezzo netto (€)</label><input id="f-netto" readonly placeholder="auto"></div>
+        <div class="field"><label>IVA (€)</label><input id="f-iva-eur" readonly placeholder="auto"></div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">Ingredienti</div>
+      <div style="display:grid;grid-template-columns:1fr 70px 50px 24px;gap:6px;margin-bottom:8px;padding:0 12px">
+        <span style="font-size:10px;font-weight:800;color:var(--grey);text-transform:uppercase;grid-column:1/3">Ingrediente dal magazzino</span>
+        <span style="font-size:10px;font-weight:800;color:var(--grey);text-transform:uppercase">Qtà</span>
+        <span style="font-size:10px;font-weight:800;color:var(--grey);text-transform:uppercase">Costo</span>
+        <span></span>
+      </div>
+      <div class="ing-list" id="ing-list"></div>
+      <button class="add-ing-btn" onclick="addIng()">+ Aggiungi ingrediente</button>
+    </div>
+
+    <!-- RISULTATI LIVE -->
+    <div class="fc-meter-wrap">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:13px;font-weight:800;color:var(--dark)">Food Cost</span>
+        <div style="text-align:right">
+          <div style="font-size:20px;font-weight:900" id="fc-pct-big">—</div>
+          <div style="font-size:11px;color:var(--grey);font-weight:700">con fissi: <span id="fc-pct-tot" style="font-weight:900;color:var(--dark)">—</span></div>
+        </div>
+      </div>
+      <div class="fc-meter-bar-bg">
+        <div class="fc-meter-bar" id="fc-bar" style="width:0%;background:var(--green)"></div>
+      </div>
+      <div class="fc-meter-labels"><span>0%</span><span style="color:var(--green)">Ottimo &lt;25%</span><span style="color:var(--orange)">25–35%</span><span style="color:var(--red)">&gt;35%</span><span>100%</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--grey);font-weight:700;margin-top:6px">
+        <span>📦 Solo ingredienti (confronto settore)</span>
+        <span>🏠 Con costi fissi (reale)</span>
+      </div>
+    </div>
+
+    <div class="results-grid">
+      <div class="res-box highlight"><div class="res-val red" id="r-cl">—</div><div class="res-lbl">Costo ingredienti €</div></div>
+      <div class="res-box blue-box"><div class="res-val blue" id="r-cf">—</div><div class="res-lbl">Costi fissi €</div></div>
+      <div class="res-box" style="background:rgba(232,52,42,.05);border:1.5px solid rgba(232,52,42,.15)"><div class="res-val red" id="r-fci">—</div><div class="res-lbl">FC solo ingredienti</div></div>
+      <div class="res-box" style="background:rgba(255,149,0,.08);border:1.5px solid rgba(255,149,0,.2)"><div class="res-val orange" id="r-fctot">—</div><div class="res-lbl">FC con fissi (reale)</div></div>
+      <div class="res-box green-box"><div class="res-val green" id="r-mg">—</div><div class="res-lbl">Margine netto €</div></div>
+      <div class="res-box green-box"><div class="res-val green" id="r-mgp">—</div><div class="res-lbl">Margine %</div></div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">Riepilogo prezzi</div>
+      <div class="iva-row"><span class="lbl">Costo ingredienti lordo</span><span class="val" id="bk-cl">—</span></div>
+      <div class="iva-row"><span class="lbl">Costi fissi applicati</span><span class="val blue" id="bk-cf">—</span></div>
+      <div class="iva-row"><span class="lbl">FC solo ingredienti %</span><span class="val red" id="bk-fci">—</span></div>
+      <div class="iva-row"><span class="lbl">FC con fissi % (reale)</span><span class="val orange" id="bk-fctot">—</span></div>
+      <div class="iva-row"><span class="lbl">Prezzo netto</span><span class="val" id="bk-pn">—</span></div>
+      <div class="iva-row"><span class="lbl">IVA su vendita</span><span class="val blue" id="bk-iv">—</span></div>
+      <div class="iva-row"><span class="lbl">Prezzo lordo</span><span class="val blue" id="bk-pl">—</span></div>
+      <div class="iva-row"><span class="lbl">Margine netto</span><span class="val green" id="bk-mg">—</span></div>
+    </div>
+
+    <button class="save-btn" onclick="saveRecipe()">Salva piatto</button>
+  </div>
+</div>
+</div>
+
+<!-- ── MODAL: COSTO FISSO ── -->
+<div class="overlay" id="cf-overlay" onclick="closeCFOnBg(event)">
+<div class="modal" id="cf-modal">
+  <div class="modal-handle"></div>
+  <div class="modal-header">
+    <div class="modal-title" id="cf-modal-title">Nuova voce</div>
+    <button class="modal-close" onclick="closeCFModal()">✕</button>
+  </div>
+  <div class="modal-body">
+    <div class="form-section">
+      <div class="field"><label>Nome voce</label><input id="cf-nome" placeholder="es. Affitto"></div>
+      <div class="field-row">
+        <div class="field"><label>Categoria</label>
+          <select id="cf-cat">
+            <option>Personale</option><option>Struttura</option><option>Utenze</option><option>Marketing</option><option>Varie</option>
+          </select>
+        </div>
+        <div class="field"><label>Costo mensile (€)</label><input type="number" id="cf-mese" placeholder="0.00" step="0.01"></div>
+      </div>
+    </div>
+    <div class="form-section">
+      <div class="form-section-title">Parametri operativi</div>
+      <div class="field-row">
+        <div class="field"><label>Giorni/mese</label><input type="number" id="cf-giorni" value="26" min="1" max="31"></div>
+        <div class="field"><label>Ore/giorno</label><input type="number" id="cf-ore" value="8" min="1" max="24" step=".5"></div>
+      </div>
+    </div>
+    <button class="save-btn" onclick="saveCF()">Salva voce</button>
+  </div>
+</div>
+</div>
+
+<script>
+// ── DATA ──
+let recipes = JSON.parse(localStorage.getItem('fc_r')||'[]');
+let cfItems = JSON.parse(localStorage.getItem('fc_cf')||'[]');
+let cfConf  = JSON.parse(localStorage.getItem('fc_cc')||'{"giorni":26,"ore":8}');
+let magazzino = JSON.parse(localStorage.getItem('fc_mag')||'[]');
+let ingRows = [];
+let editId  = null;
+let editCFId = null;
+let editIngId = null;
+let activeFilter = 'tutti';
+
+if(!cfItems.length){
+  cfItems=[
+    {id:1,nome:'Dipendenti',cat:'Personale',mese:2000,emoji:'👥'},
+    {id:2,nome:'Contributi',cat:'Personale',mese:400,emoji:'📋'},
+    {id:3,nome:'Affitto',cat:'Struttura',mese:1500,emoji:'🏠'},
+    {id:4,nome:'Luce',cat:'Utenze',mese:753.5,emoji:'💡'},
+    {id:5,nome:'Gas',cat:'Utenze',mese:250,emoji:'🔥'},
+    {id:6,nome:'Assicurazione',cat:'Varie',mese:17,emoji:'🛡️'},
+    {id:7,nome:'WiFi',cat:'Utenze',mese:50,emoji:'📶'},
+    {id:8,nome:'Allarme',cat:'Struttura',mese:3,emoji:'🔔'},
+  ];
+  localStorage.setItem('fc_cf',JSON.stringify(cfItems));
+}
+
+function save(){ localStorage.setItem('fc_r',JSON.stringify(recipes)); localStorage.setItem('fc_cf',JSON.stringify(cfItems)); localStorage.setItem('fc_cc',JSON.stringify(cfConf)); localStorage.setItem('fc_mag',JSON.stringify(magazzino)); if(GAS_URL){ pushToCloud().catch(()=>setSyncStatus('⚠️ no cloud','var(--orange)')); } }
+
+// ── MAGAZZINO INGREDIENTI ──
+function renderIngPage(){
+  const q=(document.getElementById('ing-search').value||'').toLowerCase();
+  const filtered=magazzino.filter(m=>!q||m.nome.toLowerCase().includes(q));
+  document.getElementById('ing-count').textContent=magazzino.length+' ingredient'+(magazzino.length===1?'e':'i');
+  document.getElementById('ing-list-label').textContent=filtered.length+' ingredient'+(filtered.length===1?'e':'i');
+
+  const catColors={'Carni':'rgba(232,52,42,.08)','Pesce':'rgba(0,122,255,.08)','Verdure':'rgba(52,199,89,.08)',
+    'Latticini':'rgba(255,149,0,.08)','Pasta/Cereali':'rgba(200,134,10,.08)','Altro':'rgba(142,142,147,.08)'};
+  const catEmojis={'Carni':'🥩','Pesce':'🐟','Verdure':'🥬','Latticini':'🧀','Pasta/Cereali':'🌾','Altro':'🧂'};
+
+  const cont=document.getElementById('ing-cards');
+  if(!filtered.length){
+    cont.innerHTML=`<div class="empty"><div class="empty-icon">🧺</div><div class="empty-title">${magazzino.length?'Nessun risultato':'Magazzino vuoto'}</div><div class="empty-sub">${magazzino.length?'Prova a cercare diversamente':'Aggiungi i tuoi ingredienti per usarli nelle ricette'}</div></div>`;
+    return;
+  }
+  cont.innerHTML=filtered.map((m,i)=>{
+    const usedIn=recipes.filter(r=>(r.ings||[]).some(ing=>ing.magId===m.id));
+    const bg=catColors[m.cat]||'rgba(142,142,147,.08)';
+    return `<div style="background:white;border-radius:14px;box-shadow:0 2px 12px rgba(0,0,0,.08);padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;animation:fadeUp .3s ${i*.04}s both" onclick="openIngModal(${m.id})">
+      <div style="width:46px;height:46px;border-radius:12px;background:${bg};display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${catEmojis[m.cat]||'🧂'}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:15px;font-weight:800;color:var(--dark)">${m.nome}</div>
+        <div style="font-size:11px;color:var(--grey);font-weight:600;margin:2px 0">${m.cat} · IVA ${m.iva}%${m.fornitore?' · '+m.fornitore:''}</div>
+        <div style="font-size:11px;color:var(--red);font-weight:700">${usedIn.length} piatt${usedIn.length===1?'o':'i'}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-size:17px;font-weight:900;color:var(--dark)">€${parseFloat(m.costo).toFixed(2)}</div>
+        <div style="font-size:10px;color:var(--grey);font-weight:600">/${m.unit}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openIngModal(id){
+  editIngId = id||null;
+  const m = id ? magazzino.find(x=>x.id===id) : null;
+  document.getElementById('ing-modal-title').textContent = m?'Modifica ingrediente':'Nuovo ingrediente';
+  document.getElementById('ing-nome').value = m?m.nome:'';
+  document.getElementById('ing-cat').value = m?m.cat:'Altro';
+  document.getElementById('ing-unit').value = m?m.unit:'kg';
+  document.getElementById('ing-costo').value = m?m.costo:'';
+  document.getElementById('ing-iva').value = m?String(m.iva):'10';
+  document.getElementById('ing-fornitore').value = m?m.fornitore||'':'';
+  document.getElementById('ing-del-btn').style.display = m?'block':'none';
+
+  // show usage
+  const usageWrap=document.getElementById('ing-usage-wrap');
+  const usageList=document.getElementById('ing-usage-list');
+  if(m){
+    const usedIn=recipes.filter(r=>(r.ings||[]).some(ing=>ing.magId===m.id));
+    usageWrap.style.display='block';
+    usageList.innerHTML=usedIn.length
+      ?usedIn.map(r=>`<div style="padding:4px 0;border-bottom:1px solid var(--bg);font-weight:700">🍽 ${r.nome}</div>`).join('')
+      :'<div style="color:var(--grey);font-style:italic">Non ancora usato in nessun piatto</div>';
+  } else { usageWrap.style.display='none'; }
+
+  document.getElementById('ing-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function closeIngModal(){ document.getElementById('ing-overlay').classList.remove('open'); document.body.style.overflow=''; }
+function closeIngOnBg(e){ if(e.target===document.getElementById('ing-overlay')) closeIngModal(); }
+
+function saveIng(){
+  const nome=document.getElementById('ing-nome').value.trim();
+  if(!nome){alert('Inserisci il nome!');return;}
+  const item={
+    id: editIngId||Date.now(),
+    nome,
+    cat: document.getElementById('ing-cat').value,
+    unit: document.getElementById('ing-unit').value,
+    costo: parseFloat(document.getElementById('ing-costo').value)||0,
+    iva: parseFloat(document.getElementById('ing-iva').value)||10,
+    fornitore: document.getElementById('ing-fornitore').value.trim()
+  };
+  if(editIngId){
+    magazzino=magazzino.map(m=>m.id===editIngId?item:m);
+    // ricalcola tutti i piatti che usano questo ingrediente
+    recalcAllRecipes();
+  } else {
+    magazzino.push(item);
+  }
+  save(); closeIngModal(); renderIngPage();
+}
+
+function deleteIng(){
+  if(!editIngId) return;
+  const usedIn=recipes.filter(r=>(r.ings||[]).some(ing=>ing.magId===editIngId));
+  if(usedIn.length){
+    if(!confirm('Questo ingrediente è usato in '+usedIn.length+' piatt'+(usedIn.length===1?'o':'i')+'. Vuoi eliminarlo comunque? Verrà rimosso da quei piatti.')) return;
+    recipes=recipes.map(r=>({...r,ings:(r.ings||[]).filter(i=>i.magId!==editIngId)}));
+    recalcAllRecipes();
+  }
+  magazzino=magazzino.filter(m=>m.id!==editIngId);
+  save(); closeIngModal(); renderIngPage();
+}
+
+function recalcAllRecipes(){
+  // ricalcola i valori FC/margine di tutti i piatti con i prezzi aggiornati
+  recipes=recipes.map(r=>{
+    const lordo=r.lordo||0;
+    const ivaR=r.ivaR||0.10;
+    const netto=lordo>0?lordo/(1+ivaR):0;
+    const tempo=r.tempo||0;
+    let totL=0,totN=0;
+    (r.ings||[]).forEach(ing=>{
+      const mag=ing.magId?magazzino.find(m=>m.id===ing.magId):null;
+      const c=mag?parseFloat(mag.costo)||0:parseFloat(ing.costoL)||0;
+      const iv=(parseFloat(mag?mag.iva:ing.iva)||10)/100;
+      const qty=parseFloat(ing.qty)||0;
+      const unit=mag?mag.unit:(ing.unit||'kg');
+      const rN=unit==='pz'?qty*c:(qty/1000)*c;
+      const rL=rN*(1+iv);
+      // update stored price
+      if(mag){ ing.costoL=mag.costo; ing.unit=mag.unit; }
+      totN+=rN; totL+=rL;
+    });
+    const cfApp=cfPerMin()*tempo;
+    const costoTot=totL+cfApp;
+    const fci=lordo>0?(totL/lordo)*100:null;
+    const mg=netto>0?netto-costoTot:null;
+    const mgp=netto>0&&mg!=null?(mg/netto)*100:null;
+    return {...r,totIngL:totL,totIngN:totN,cfApp,costoTot,fci,mg,mgp,netto};
+  });
+}
+
+// ── HELPERS ──
+function cfTotal(){ return cfItems.reduce((s,c)=>s+c.mese,0); }
+function cfPerMin(){ const m=cfConf.giorni*cfConf.ore*60; return m>0?cfTotal()/m:0; }
+function fcClass(fc){ return fc<25?'fc-good':fc<=35?'fc-warn':'fc-bad'; }
+function fcColor(fc){ return fc<25?'var(--green)':fc<=35?'var(--orange)':'var(--red)'; }
+function catEmoji(cat){ return {Antipasto:'🥗',Primo:'🍝',Secondo:'🥩',Contorno:'🥦',Dessert:'🍰',Bevanda:'🍷'}[cat]||'🍽️'; }
+function cfEmoji(cat){ return {Personale:'👥',Struttura:'🏠',Utenze:'⚡',Marketing:'📣',Varie:'📌'}[cat]||'💰'; }
+
+// ── PAGES ──
+let currentPage = 'piatti';
+function showPage(p){
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>{ b.querySelector('.nav-lbl').style.color=''; });
+  const nb = document.getElementById('nav-'+p);
+  if(nb) nb.querySelector('.nav-lbl').style.color='var(--red)';
+  currentPage = p;
+  if(p==='piatti') renderCards();
+  if(p==='ing') renderIngPage();
+  if(p==='cf') renderCF();
+  if(p==='stats') renderStats();
+}
+
+// ── RENDER CARDS ──
+function renderCards(){
+  const q = document.getElementById('search-input').value.toLowerCase();
+  let filtered = recipes.filter(r=>{
+    const matchQ = !q || r.nome.toLowerCase().includes(q);
+    const matchF = activeFilter==='tutti' || r.cat===activeFilter;
+    return matchQ && matchF;
+  });
+
+  document.getElementById('piatti-count').textContent = `${recipes.length} piatt${recipes.length===1?'o':'i'}`;
+  document.getElementById('stat-tot').textContent = recipes.length;
+
+  const withFC = recipes.filter(r=>r.fci!=null);
+  if(withFC.length){
+    const avgFC = withFC.reduce((s,r)=>s+r.fci,0)/withFC.length;
+    const avgMg = recipes.filter(r=>r.mg!=null).reduce((s,r)=>s+r.mg,0)/(recipes.filter(r=>r.mg!=null).length||1);
+    document.getElementById('stat-fc').textContent = avgFC.toFixed(1)+'%';
+    document.getElementById('stat-mg').textContent = '€'+avgMg.toFixed(2);
+  }
+
+  document.getElementById('cards-label').textContent = `${filtered.length} ricett${filtered.length===1?'a':'e'}`;
+
+  const c = document.getElementById('cards-container');
+  if(!filtered.length){
+    c.innerHTML = `<div class="empty"><div class="empty-icon">🍽️</div><div class="empty-title">${recipes.length?'Nessun risultato':'Nessun piatto ancora'}</div><div class="empty-sub">${recipes.length?'Prova a cambiare il filtro':'Premi + per aggiungere il tuo primo piatto'}</div></div>`;
+    return;
+  }
+
+  c.innerHTML = filtered.map((r,i) => {
+    const fc = r.fci!=null?r.fci:null;
+    const pill = fc!=null?`<span class="fc-pill ${fcClass(fc)}">${fc.toFixed(1)}%</span>`:'';
+    return `<div class="rcard" style="animation-delay:${i*0.04}s" onclick="toggleActions(${r.id})">
+      <div class="rcard-img">${catEmoji(r.cat)}</div>
+      <div class="rcard-body">
+        <div class="rcard-name">${r.nome}</div>
+        <div class="rcard-cat">${r.cat}${r.tempo?' · ⏱ '+r.tempo+' min':''}</div>
+        <div class="rcard-nums">
+          <div class="rcard-price">€${(r.lordo||0).toFixed(2)} <span>lordo</span></div>
+          ${pill}
+        </div>
+      </div>
+      <div class="rcard-right">
+        <div class="rcard-fc-val" style="color:${fc!=null?fcColor(fc):'var(--grey)'}">€${(r.totIngL||0).toFixed(2)}</div>
+        <div class="rcard-fc-lbl">Food Cost</div>
+        ${r.mg!=null?`<div class="rcard-margine">€${r.mg.toFixed(2)}</div>`:''}
+      </div>
+      <div class="rcard-actions" id="actions-${r.id}">
+        <button class="act-btn act-edit" onclick="event.stopPropagation();editRecipe(${r.id})">✎</button>
+        <button class="act-btn act-del" onclick="event.stopPropagation();delRecipe(${r.id})">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleActions(id){
+  document.querySelectorAll('.rcard').forEach(c=>c.classList.remove('show-actions'));
+  const card = document.querySelector(`#actions-${id}`)?.closest('.rcard');
+  if(card) card.classList.toggle('show-actions');
+}
+
+function setFilter(f,btn){
+  activeFilter = f;
+  document.querySelectorAll('.ftab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCards();
+}
+
+function filterCards(){ renderCards(); }
+
+// ── MODAL ──
+function openModal(){
+  editId=null;
+  document.getElementById('modal-title').textContent='Nuovo piatto';
+  document.getElementById('f-nome').value='';
+  document.getElementById('f-cat').value='Primo';
+  document.getElementById('f-lordo').value='';
+  document.getElementById('f-iva').value='10';
+  document.getElementById('f-netto').value='';
+  document.getElementById('f-iva-eur').value='';
+  document.getElementById('f-tempo').value='';
+  ingRows=[];addIng();addIng();
+  liveCalc();
+  document.getElementById('overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function closeModal(){ document.getElementById('overlay').classList.remove('open'); document.body.style.overflow=''; }
+function closeOnBg(e){ if(e.target===document.getElementById('overlay')) closeModal(); }
+
+function editRecipe(id){
+  const r=recipes.find(r=>r.id===id); if(!r) return;
+  editId=id;
+  document.getElementById('modal-title').textContent='Modifica piatto';
+  document.getElementById('f-nome').value=r.nome;
+  document.getElementById('f-cat').value=r.cat;
+  document.getElementById('f-lordo').value=r.lordo||'';
+  document.getElementById('f-iva').value=String((r.ivaR||0.1)*100);
+  document.getElementById('f-tempo').value=r.tempo||'';
+  ingRows = (r.ings||[]).map(i=>({id:Date.now()+Math.random(),magId:i.magId||null,nome:i.nome,qty:i.qty,costoL:i.costoL,iva:String((i.iva||0.1)*100)}));
+  if(!ingRows.length){addIng();}
+  renderIngList();
+  liveCalc();
+  document.getElementById('overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function delRecipe(id){
+  if(!confirm('Eliminare questo piatto?')) return;
+  recipes=recipes.filter(r=>r.id!==id); save(); renderCards();
+}
+
+// ── INGREDIENTI ──
+function addIng(d={}){
+  ingRows.push({id:Date.now()+Math.random(),magId:d.magId||null,nome:d.nome||'',qty:d.qty||'',costoL:d.costoL||'',iva:d.iva||'10'});
+  renderIngList();
+}
+
+function removeIng(id){ ingRows=ingRows.filter(r=>r.id!==id); renderIngList(); liveCalc(); }
+function updIng(id,f,v){ const r=ingRows.find(r=>r.id===id); if(r){r[f]=v; liveCalc();} }
+
+function renderIngList(){
+  // build options from magazzino
+  const opts = magazzino.length
+    ? magazzino.map(m=>`<option value="${m.id}">${m.nome} (€${m.costo}/${m.unit})</option>`).join('')
+    : '<option value="">— nessun ingrediente nel magazzino —</option>';
+
+  document.getElementById('ing-list').innerHTML = ingRows.map(r=>{
+    const mag = magazzino.find(m=>m.id===r.magId);
+    const selectedOpts = magazzino.map(m=>`<option value="${m.id}" ${r.magId===m.id?'selected':''}>${m.nome} (€${m.costo}/${m.unit})</option>`).join('');
+    return `<div class="ing-row">
+      <select style="grid-column:1/3" onchange="selectMagIng(${r.id},this.value)">
+        <option value="">— scegli ingrediente —</option>
+        ${selectedOpts}
+      </select>
+      <input type="number" value="${r.qty}" placeholder="${mag&&mag.unit==='pz'?'pz':'g/ml'}" step="${mag&&mag.unit==='pz'?'1':'0.1'}" min="0" onchange="updIng(${r.id},'qty',this.value)" title="Quantità">
+      <div style="font-size:10px;color:var(--grey);text-align:center;padding:4px 2px;background:var(--bg);border-radius:8px">
+        ${mag?(mag.unit==='pz'?'€'+((r.qty||0)*(mag.costo||0)).toFixed(3):'€'+((r.qty/1000)*(mag.costo||0)).toFixed(3)):'—'}
+      </div>
+      <button class="ing-del" onclick="removeIng(${r.id})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function selectMagIng(rowId, magId){
+  const row = ingRows.find(r=>r.id===rowId);
+  if(!row) return;
+  const mag = magazzino.find(m=>m.id===parseInt(magId));
+  if(mag){
+    row.magId = mag.id;
+    row.nome = mag.nome;
+    row.costoL = mag.costo;
+    row.iva = String(mag.iva);
+  } else {
+    row.magId = null; row.nome=''; row.costoL=''; row.iva='10';
+  }
+  renderIngList();
+  liveCalc();
+}
+
+// ── CALCOLO LIVE ──
+function liveCalc(){
+  const lordo = parseFloat(document.getElementById('f-lordo').value)||0;
+  const ivaR  = (parseFloat(document.getElementById('f-iva').value)||10)/100;
+  const tempo = parseFloat(document.getElementById('f-tempo').value)||0;
+  const netto = lordo>0?lordo/(1+ivaR):0;
+  const ivaEur = lordo-netto;
+
+  document.getElementById('f-netto').value   = lordo>0?netto.toFixed(2):'';
+  document.getElementById('f-iva-eur').value = lordo>0?ivaEur.toFixed(2):'';
+
+  // ingredients — use magazzino price if linked
+  let totL=0, totN=0;
+  ingRows.forEach(r=>{
+    const qty=parseFloat(r.qty)||0, iv=(parseFloat(r.iva)||10)/100;
+    const mag = r.magId ? magazzino.find(m=>m.id===r.magId) : null;
+    const c = mag ? parseFloat(mag.costo)||0 : parseFloat(r.costoL)||0;
+    const unit = mag ? mag.unit : 'kg';
+    const rN = unit==='pz' ? qty*c : (qty/1000)*c;
+    const rL=rN*(1+iv);
+    totN+=rN; totL+=rL;
+  });
+
+  const cfApp = cfPerMin()*tempo;
+  const costoTot = totL+cfApp;
+  const fc = netto>0?(totN/netto)*100:null;
+  const fci= lordo>0?(totL/lordo)*100:null;
+  const mg = netto>0?netto-costoTot:null;
+  const mgp= netto>0&&mg!=null?(mg/netto)*100:null;
+
+  // meter — mostra FC solo ingredienti sulla barra, FC totale accanto
+  const fciTotMeter = lordo>0?((totL+cfApp)/lordo)*100:null;
+  if(fci!=null){
+    const bar=document.getElementById('fc-bar');
+    bar.style.width=Math.min(fci,100)+'%';
+    bar.style.background=fcColor(fci);
+    document.getElementById('fc-pct-big').textContent=fci.toFixed(1)+'%';
+    document.getElementById('fc-pct-big').style.color=fcColor(fci);
+    document.getElementById('fc-pct-tot').textContent=fciTotMeter!=null?fciTotMeter.toFixed(1)+'%':'—';
+    document.getElementById('fc-pct-tot').style.color=fciTotMeter!=null?fcColor(fciTotMeter):'var(--grey)';
+  } else {
+    document.getElementById('fc-bar').style.width='0%';
+    document.getElementById('fc-pct-big').textContent='—';
+    document.getElementById('fc-pct-big').style.color='var(--grey)';
+    document.getElementById('fc-pct-tot').textContent='—';
+    document.getElementById('fc-pct-tot').style.color='var(--grey)';
+  }
+
+  const fciIng = lordo>0?(totL/lordo)*100:null;       // FC solo ingredienti (lordo/lordo)
+  const fciTot = lordo>0?((totL+cfApp)/lordo)*100:null; // FC totale con fissi
+
+  document.getElementById('r-cl').textContent  = totL>0?'€'+totL.toFixed(2):'—';
+  document.getElementById('r-cf').textContent  = cfApp>0?'€'+cfApp.toFixed(2):'—';
+  document.getElementById('r-fci').textContent  = fciIng!=null?fciIng.toFixed(1)+'%':'—';
+  document.getElementById('r-fci').style.color  = fciIng!=null?fcColor(fciIng):'var(--grey)';
+  document.getElementById('r-fctot').textContent = fciTot!=null?fciTot.toFixed(1)+'%':'—';
+  document.getElementById('r-fctot').style.color = fciTot!=null?fcColor(fciTot):'var(--grey)';
+  document.getElementById('r-mg').textContent  = mg!=null?'€'+mg.toFixed(2):'—';
+  document.getElementById('r-mgp').textContent = mgp!=null?mgp.toFixed(1)+'%':'—';
+
+  document.getElementById('bk-cl').textContent = totL>0?'€'+totL.toFixed(2):'—';
+  document.getElementById('bk-cf').textContent = cfApp>0?'€'+cfApp.toFixed(2):'—';
+  document.getElementById('bk-fci').textContent = fci!=null?fci.toFixed(1)+'%':'—';
+  document.getElementById('bk-fci').style.color = fci!=null?fcColor(fci):'var(--grey)';
+  document.getElementById('bk-fctot').textContent = fciTotMeter!=null?fciTotMeter.toFixed(1)+'%':'—';
+  document.getElementById('bk-fctot').style.color = fciTotMeter!=null?fcColor(fciTotMeter):'var(--grey)';
+  document.getElementById('bk-pn').textContent = netto>0?'€'+netto.toFixed(2):'—';
+  document.getElementById('bk-iv').textContent = ivaEur>0?'€'+ivaEur.toFixed(2):'—';
+  document.getElementById('bk-pl').textContent = lordo>0?'€'+lordo.toFixed(2):'—';
+  document.getElementById('bk-mg').textContent = mg!=null?'€'+mg.toFixed(2)+(mgp!=null?' ('+mgp.toFixed(1)+'%)':''):'—';
+}
+
+function saveRecipe(){
+  const nome=document.getElementById('f-nome').value.trim();
+  if(!nome){alert('Inserisci il nome del piatto!');return;}
+  const lordo=parseFloat(document.getElementById('f-lordo').value)||0;
+  const ivaR=(parseFloat(document.getElementById('f-iva').value)||10)/100;
+  const netto=lordo>0?lordo/(1+ivaR):0;
+  const ivaEur=lordo-netto;
+  const tempo=parseFloat(document.getElementById('f-tempo').value)||0;
+  const cat=document.getElementById('f-cat').value;
+  const ings=ingRows.filter(r=>r.nome||r.magId).map(r=>{
+    const mag=r.magId?magazzino.find(m=>m.id===r.magId):null;
+    return {magId:r.magId||null,nome:mag?mag.nome:r.nome,qty:parseFloat(r.qty)||0,costoL:mag?parseFloat(mag.costo)||0:parseFloat(r.costoL)||0,iva:(parseFloat(mag?mag.iva:r.iva)||10)/100,unit:mag?mag.unit:'kg'};
+  });
+  let totL=0,totN=0;
+  ings.forEach(i=>{const rN=i.unit==='pz'?i.qty*i.costoL:(i.qty/1000)*i.costoL;totN+=rN;totL+=rN*(1+i.iva);});
+  const cfApp=cfPerMin()*tempo;
+  const costoTot=totL+cfApp;
+  const fci=lordo>0?(totL/lordo)*100:null;
+  const mg=netto>0?netto-costoTot:null;
+  const mgp=netto>0&&mg!=null?(mg/netto)*100:null;
+  const rec={id:editId||Date.now(),nome,cat,lordo,netto,ivaR,ivaEur,tempo,ings,totIngL:totL,totIngN:totN,cfApp,costoTot,fci,mg,mgp};
+  if(editId) recipes=recipes.map(r=>r.id===editId?rec:r); else recipes.push(rec);
+  save(); closeModal(); renderCards();
+}
+
+// ── COSTI FISSI ──
+function renderCF(){
+  const tot=cfTotal(), cpm=cfPerMin();
+  document.getElementById('cf-tot-val').textContent='€ '+tot.toFixed(0);
+  document.getElementById('cf-min-val').textContent=cpm.toFixed(5);
+  document.getElementById('cf-giorni-val').textContent=cfConf.giorni;
+  document.getElementById('cf-ore-val').textContent=cfConf.ore+'h';
+
+  document.getElementById('cf-list').innerHTML = cfItems.map(c=>`
+    <div class="cf-card" onclick="editCF(${c.id})">
+      <div class="cf-left">
+        <div class="cf-icon" style="background:rgba(232,52,42,.08)">${c.emoji||cfEmoji(c.cat)}</div>
+        <div>
+          <div class="cf-name">${c.nome}</div>
+          <div class="cf-cat">${c.cat}</div>
+        </div>
+      </div>
+      <div>
+        <div class="cf-val">€ ${c.mese.toFixed(2)}</div>
+        <div class="cf-sub">${(c.mese/(cfConf.giorni*cfConf.ore*60)).toFixed(5)} €/min</div>
+      </div>
+    </div>`).join('');
+
+  // add button
+  document.getElementById('cf-list').innerHTML += `<button class="add-ing-btn" style="margin-top:4px" onclick="openCFModal()">+ Aggiungi voce di costo</button>`;
+}
+
+function openCFModal(){
+  editCFId=null;
+  document.getElementById('cf-modal-title').textContent='Nuova voce';
+  document.getElementById('cf-nome').value='';
+  document.getElementById('cf-mese').value='';
+  document.getElementById('cf-cat').value='Struttura';
+  document.getElementById('cf-giorni').value=cfConf.giorni;
+  document.getElementById('cf-ore').value=cfConf.ore;
+  document.getElementById('cf-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function editCF(id){
+  const c=cfItems.find(c=>c.id===id); if(!c) return;
+  editCFId=id;
+  document.getElementById('cf-modal-title').textContent='Modifica voce';
+  document.getElementById('cf-nome').value=c.nome;
+  document.getElementById('cf-mese').value=c.mese;
+  document.getElementById('cf-cat').value=c.cat;
+  document.getElementById('cf-giorni').value=cfConf.giorni;
+  document.getElementById('cf-ore').value=cfConf.ore;
+  document.getElementById('cf-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function closeCFModal(){ document.getElementById('cf-overlay').classList.remove('open'); document.body.style.overflow=''; }
+function closeCFOnBg(e){ if(e.target===document.getElementById('cf-overlay')) closeCFModal(); }
+
+function saveCF(){
+  const nome=document.getElementById('cf-nome').value.trim();
+  if(!nome){alert('Inserisci il nome!');return;}
+  cfConf.giorni=parseFloat(document.getElementById('cf-giorni').value)||26;
+  cfConf.ore=parseFloat(document.getElementById('cf-ore').value)||8;
+  const item={id:editCFId||Date.now(),nome,cat:document.getElementById('cf-cat').value,mese:parseFloat(document.getElementById('cf-mese').value)||0,emoji:cfEmoji(document.getElementById('cf-cat').value)};
+  if(editCFId) cfItems=cfItems.map(c=>c.id===editCFId?item:c); else cfItems.push(item);
+  save(); closeCFModal(); renderCF();
+}
+
+// ── CALCOLO RAPIDO ──
+function quickCalc(){
+  const ci=parseFloat(document.getElementById('qc-ci').value)||0;
+  const pl=parseFloat(document.getElementById('qc-pl').value)||0;
+  const iva=parseFloat(document.getElementById('qc-iva').value)||10;
+  if(!pl) return;
+  const pn=pl/(1+iva/100), iv=pl-pn;
+  document.getElementById('qc-pnetto').textContent='€'+pn.toFixed(2);
+  document.getElementById('qc-iva-eur').textContent='€'+iv.toFixed(2);
+  if(ci&&pn){
+    const fc=(ci/pn)*100, mg=pn-ci;
+    const el=document.getElementById('qc-fc');
+    el.textContent=fc.toFixed(1)+'%'; el.style.color=fcColor(fc);
+    document.getElementById('qc-mg').textContent='€'+mg.toFixed(2);
+  }
+}
+
+function priceCalc(){
+  const ci=parseFloat(document.getElementById('pc-ci').value)||0;
+  const fc=parseFloat(document.getElementById('pc-fc').value)||30;
+  const iva=parseFloat(document.getElementById('pc-iva').value)||10;
+  if(!ci||!fc) return;
+  const pn=ci/(fc/100);
+  const pl=pn*(1+iva/100);
+  document.getElementById('pc-pnetto').textContent='€'+pn.toFixed(2);
+  document.getElementById('pc-plordo').textContent='€'+pl.toFixed(2);
+}
+
+// ── ANALISI ──
+function renderStats(){
+  document.getElementById('an-tot').textContent=recipes.length;
+  const wf=recipes.filter(r=>r.fci!=null);
+  document.getElementById('an-fc').textContent=wf.length?(wf.reduce((s,r)=>s+r.fci,0)/wf.length).toFixed(1)+'%':'—';
+  const wm=recipes.filter(r=>r.mg!=null);
+  const avgMg=wm.length?wm.reduce((s,r)=>s+r.mg,0)/wm.length:null;
+  document.getElementById('an-mg').textContent=avgMg!=null?'€'+avgMg.toFixed(2):'—';
+  const wp=recipes.filter(r=>r.lordo);
+  const avgPrezzo=wp.length?wp.reduce((s,r)=>s+r.lordo,0)/wp.length:null;
+  document.getElementById('an-prezzo').textContent=avgPrezzo!=null?'€'+avgPrezzo.toFixed(2):'—';
+  const cf=cfTotal();
+  document.getElementById('an-cf').textContent='€'+cf.toFixed(2)+'/mese';
+  document.getElementById('an-good').textContent=recipes.filter(r=>r.fci!=null&&r.fci<25).length;
+  document.getElementById('an-warn').textContent=recipes.filter(r=>r.fci!=null&&r.fci>=25&&r.fci<=35).length;
+  document.getElementById('an-bad').textContent=recipes.filter(r=>r.fci!=null&&r.fci>35).length;
+
+  // ── BREAK EVEN ──
+  // Margine di contribuzione unitario = prezzo netto - costo ingredienti netti
+  const wv=recipes.filter(r=>r.netto>0&&r.totIngN!=null);
+  const avgMCU=wv.length?wv.reduce((s,r)=>s+(r.netto-(r.totIngN||0)),0)/wv.length:null;
+  const prezzoInput=parseFloat(document.getElementById('be-input-prezzo').value)||0;
+  const copertiInput=parseInt(document.getElementById('be-input-coperti').value)||0;
+  const prezzoMedio=prezzoInput>0?prezzoInput:(avgPrezzo||0);
+
+  if(avgMCU&&avgMCU>0&&cf>0){
+    const bepCop=Math.ceil(cf/avgMCU);
+    const bepFatturato=bepCop*prezzoMedio;
+    const bepGiorno=Math.ceil(bepCop/(cfConf.giorni||26));
+    document.getElementById('be-coperti').textContent=bepCop.toLocaleString('it-IT');
+    document.getElementById('be-fatturato').textContent=bepFatturato>0?'€'+Math.ceil(bepFatturato).toLocaleString('it-IT'):'—';
+    document.getElementById('be-giorno').textContent=bepGiorno;
+    document.getElementById('be-margunit').textContent='€'+avgMCU.toFixed(2);
+
+    const copStim=copertiInput>0?copertiInput:(cfConf.coperti||bepCop);
+    document.getElementById('be-cop-stim').textContent=copStim.toLocaleString('it-IT');
+    const pct=Math.min((copStim/bepCop)*100,100);
+    const over=copStim>=bepCop;
+    const bar=document.getElementById('be-bar');
+    bar.style.width=pct+'%';
+    bar.style.background=over?'#34C759':'#FF9500';
+    const lbl=document.getElementById('be-status-lbl');
+    lbl.textContent=over?'✅ In utile +'+( copStim-bepCop)+' cop.':'⚠️ Mancano '+(bepCop-copStim)+' cop.';
+    lbl.style.color=over?'#34C759':'#FF9500';
+    document.getElementById('be-bar-label').textContent='BEP: '+bepCop+' cop.';
+  } else {
+    ['be-coperti','be-fatturato','be-giorno','be-margunit'].forEach(id=>document.getElementById(id).textContent='—');
+    document.getElementById('be-cop-stim').textContent='—';
+    document.getElementById('be-bar').style.width='0%';
+    document.getElementById('be-status-lbl').textContent='Inserisci piatti con prezzi';
+    document.getElementById('be-bar-label').textContent='';
+  }
+  simBE();
+}
+
+function simBE(){
+  const coperti=parseFloat(document.getElementById('be-sim-coperti').value)||0;
+  const scontrino=parseFloat(document.getElementById('be-sim-scontrino').value)||0;
+  const fc_pct=(parseFloat(document.getElementById('be-sim-fc').value)||30)/100;
+  const cf=cfTotal();
+  document.getElementById('sim-cf').textContent='€'+cf.toFixed(2);
+  if(!coperti||!scontrino){
+    ['sim-fatturato','sim-cv','sim-mc','sim-risultato'].forEach(id=>document.getElementById(id).textContent='—');
+    return;
+  }
+  const fatturato=coperti*(cfConf.giorni||26)*scontrino;
+  const cv=fatturato*fc_pct;
+  const mc=fatturato-cv;
+  const risultato=mc-cf;
+  document.getElementById('sim-fatturato').textContent='€'+fatturato.toFixed(0);
+  document.getElementById('sim-cv').textContent='€'+cv.toFixed(0);
+  document.getElementById('sim-mc').textContent='€'+mc.toFixed(0);
+  const r=document.getElementById('sim-risultato');
+  r.textContent=(risultato>=0?'+ ':'- ')+'€'+Math.abs(risultato).toFixed(0);
+  r.style.color=risultato>=0?'var(--green)':'var(--red)';
+}
+
+// ── EXPORT ──
+function getExportRows(){
+  return recipes.map(r => ({
+    'Piatto': r.nome||'',
+    'Categoria': r.cat||'',
+    'Prezzo lordo (€)': (r.lordo||0).toFixed(2),
+    'IVA vendita (%)': ((r.ivaR||0.1)*100).toFixed(0)+'%',
+    'Prezzo netto (€)': (r.netto||0).toFixed(2),
+    'Costo ingredienti lordo (€)': (r.totIngL||0).toFixed(3),
+    'Costi fissi applicati (€)': (r.cfApp||0).toFixed(3),
+    'FC solo ingredienti (%)': r.fci!=null?r.fci.toFixed(1)+'%':'—',
+    'FC con fissi % (reale)': r.lordo>0?(((r.totIngL||0)+(r.cfApp||0))/r.lordo*100).toFixed(1)+'%':'—',
+    'Margine netto (€)': r.mg!=null?r.mg.toFixed(2):'—',
+    'Margine (%)': r.mgp!=null?r.mgp.toFixed(1)+'%':'—',
+    'Tempo (min)': r.tempo||0,
+    'Ingredienti': (r.ings||[]).map(i=>i.nome+(i.qty?' '+i.qty+(i.unit==='pz'?' pz':i.unit==='L'?' ml':' g'):'')).join(', ')
+  }));
+}
+
+function exportExcel(){
+  if(!recipes.length){alert('Nessun piatto da esportare!');return;}
+  if(typeof XLSX==='undefined'){alert('Libreria Excel non caricata. Prova il CSV!');return;}
+  const rows = getExportRows();
+  const ws = XLSX.utils.json_to_sheet(rows);
+  // Column widths
+  ws['!cols'] = [
+    {wch:28},{wch:12},{wch:16},{wch:12},{wch:16},{wch:22},{wch:22},
+    {wch:22},{wch:22},{wch:18},{wch:12},{wch:12},{wch:38}
+  ];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Food Cost');
+
+  // Aggiungi foglio costi fissi
+  const cfRows = cfItems.map(c=>({'Voce':c.nome,'Categoria':c.cat,'Costo mensile (€)':c.mese.toFixed(2),'€/min':(c.mese/(cfConf.giorni*cfConf.ore*60)).toFixed(5)}));
+  cfRows.push({'Voce':'TOTALE','Categoria':'','Costo mensile (€)':cfTotal().toFixed(2),'€/min':cfPerMin().toFixed(5)});
+  const ws2 = XLSX.utils.json_to_sheet(cfRows);
+  ws2['!cols']=[{wch:20},{wch:14},{wch:18},{wch:12}];
+  XLSX.utils.book_append_sheet(wb, ws2, 'Costi Fissi');
+
+  XLSX.writeFile(wb, 'FoodCost_'+new Date().toISOString().slice(0,10)+'.xlsx');
+}
+
+function exportCSV(){
+  if(!recipes.length){alert('Nessun piatto da esportare!');return;}
+  const rows = getExportRows();
+  const headers = Object.keys(rows[0]);
+  const csvContent = [
+    headers.join(';'),
+    ...rows.map(r=>headers.map(h=>{
+      const v = String(r[h]||'').replace(/"/g,'""');
+      return v.includes(';')||v.includes('"')||v.includes('
+')?'"'+v+'"':v;
+    }).join(';'))
+  ].join('
+');
+  const blob = new Blob(['﻿'+csvContent],{type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'FoodCost_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+}
+
+function exportPDF(){
+  if(!recipes.length){alert('Nessun piatto da esportare!');return;}
+  const date = new Date().toLocaleDateString('it-IT');
+  const cfTot = cfTotal();
+  const rows = recipes.map(r=>{
+    const fctot = r.lordo>0?(((r.totIngL||0)+(r.cfApp||0))/r.lordo*100):null;
+    return `<tr>
+      <td>${r.nome}</td>
+      <td>${r.cat}</td>
+      <td>€${(r.lordo||0).toFixed(2)}</td>
+      <td>€${(r.totIngL||0).toFixed(2)}</td>
+      <td>€${(r.cfApp||0).toFixed(2)}</td>
+      <td>${r.fci!=null?r.fci.toFixed(1)+'%':'—'}</td>
+      <td>${fctot!=null?fctot.toFixed(1)+'%':'—'}</td>
+      <td>${r.mg!=null?'€'+r.mg.toFixed(2):'—'}</td>
+      <td>${r.mgp!=null?r.mgp.toFixed(1)+'%':'—'}</td>
+    </tr>`;
+  }).join('');
+
+  const cfRows = cfItems.map(c=>`<tr><td>${c.nome}</td><td>${c.cat}</td><td>€${c.mese.toFixed(2)}</td></tr>`).join('');
+
+  const win = window.open('','_blank');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>Food Cost Report - ${date}</title>
+  <style>
+    body{font-family:Arial,sans-serif;font-size:11px;margin:20px;color:#1C1C1E}
+    h1{color:#E8342A;font-size:20px;margin-bottom:4px}
+    h2{font-size:13px;color:#555;margin:18px 0 8px;border-bottom:2px solid #E8342A;padding-bottom:4px}
+    table{width:100%;border-collapse:collapse;margin-bottom:16px}
+    th{background:#E8342A;color:white;padding:6px 8px;text-align:left;font-size:10px}
+    td{padding:5px 8px;border-bottom:1px solid #eee}
+    tr:nth-child(even) td{background:#F9F9F9}
+    .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+    .sum-box{background:#F2F2F7;border-radius:8px;padding:10px;text-align:center}
+    .sum-val{font-size:16px;font-weight:bold;color:#E8342A}
+    .sum-lbl{font-size:9px;color:#8E8E93;text-transform:uppercase;margin-top:2px}
+    @media print{body{margin:10px}}
+  </style></head><body>
+  <h1>🍽 Food Cost Report</h1>
+  <p style="color:#8E8E93;margin-bottom:16px">Generato il ${date} · ${recipes.length} piatti</p>
+
+  <div class="summary">
+    <div class="sum-box"><div class="sum-val">${recipes.length}</div><div class="sum-lbl">Piatti totali</div></div>
+    <div class="sum-box"><div class="sum-val">${recipes.filter(r=>r.fci!=null).length?(recipes.filter(r=>r.fci!=null).reduce((s,r)=>s+r.fci,0)/recipes.filter(r=>r.fci!=null).length).toFixed(1)+'%':'—'}</div><div class="sum-lbl">FC medio ingredienti</div></div>
+    <div class="sum-box"><div class="sum-val">${recipes.filter(r=>r.mg!=null).length?'€'+(recipes.filter(r=>r.mg!=null).reduce((s,r)=>s+r.mg,0)/recipes.filter(r=>r.mg!=null).length).toFixed(2):'—'}</div><div class="sum-lbl">Margine medio</div></div>
+    <div class="sum-box"><div class="sum-val">€${cfTot.toFixed(0)}</div><div class="sum-lbl">Costi fissi/mese</div></div>
+  </div>
+
+  <h2>📋 Dettaglio Piatti</h2>
+  <table>
+    <thead><tr>
+      <th>Piatto</th><th>Cat.</th><th>Prezzo</th>
+      <th>Ing. lordo</th><th>Costi fissi</th>
+      <th>FC ing.</th><th>FC reale</th>
+      <th>Margine €</th><th>Margine %</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+
+  <h2>💰 Costi Fissi Mensili</h2>
+  <table>
+    <thead><tr><th>Voce</th><th>Categoria</th><th>Costo mensile</th></tr></thead>
+    <tbody>${cfRows}<tr style="font-weight:bold"><td>TOTALE</td><td></td><td>€${cfTot.toFixed(2)}</td></tr></tbody>
+  </table>
+
+
+  </body></html>`);
+  win.document.close();
+  setTimeout(function(){win.print();},800);
+}
+
+// ── GOOGLE SHEETS SYNC ──
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzMpZ_McJ-kO3BnsCf34POdRXjTGBN0hN3NwxhN6EJRPQR3QhYmmSwBes9haVlalY7pXg/exec';
+
+function setSyncStatus(msg, color){
+  const el = document.getElementById('sync-status');
+  if(el){ el.textContent = msg; el.style.color = color || 'var(--grey)'; }
+}
+
+async function syncNow(){
+  if(!GAS_URL){ alert('Configura prima il GAS_URL nel codice!'); return; }
+  const btn = document.getElementById('sync-btn');
+  btn.textContent = '⏳'; btn.disabled = true;
+  setSyncStatus('⏳ sync...', 'var(--orange)');
+  try {
+    // Prima carica dal cloud
+    const res = await fetch(GAS_URL + '?action=load');
+    const data = await res.json();
+    if(data.error) throw new Error(data.error);
+
+    // Merge: il cloud vince se ha dati, altrimenti usa locale
+    if(data.ricette && data.ricette.length)    recipes    = data.ricette;
+    if(data.magazzino && data.magazzino.length) magazzino  = data.magazzino;
+    if(data.costiFissi && data.costiFissi.length) cfItems  = data.costiFissi;
+    if(data.config && data.config.length){
+      const c = data.config[0];
+      if(c) cfConf = { giorni: c.giorni||26, ore: c.ore||8 };
+    }
+
+    // Poi salva tutto sul cloud (compreso ciò che era solo in locale)
+    await pushToCloud();
+
+    save(); // aggiorna localStorage
+    renderCards();
+    setSyncStatus('✅ ' + new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}), 'var(--green)');
+  } catch(err) {
+    setSyncStatus('❌ errore', 'var(--red)');
+    alert('Errore sync: ' + err.message);
+  }
+  btn.textContent = '☁️ Sync'; btn.disabled = false;
+}
+
+async function pushToCloud(){
+  if(!GAS_URL) return;
+  const payload = {
+    action: 'save',
+    ricette:    recipes,
+    magazzino:  magazzino,
+    costiFissi: cfItems,
+    config:     [{ giorni: cfConf.giorni, ore: cfConf.ore }]
+  };
+  const res = await fetch(GAS_URL, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+  if(data.error) throw new Error(data.error);
+  setSyncStatus('✅ ' + new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}), 'var(--green)');
+}
+
+// Auto-push dopo ogni salvataggio: aggiunto direttamente nella save() originale
+
+// ── INIT ──
+renderCards();
+renderIngList();
+</script>
+</body>
+</html>
